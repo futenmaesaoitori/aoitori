@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>よみきかせ記録</title>
+<style>
+:root {
+  --green: #2d7a4f; --green-light: #e8f5ee; --green-mid: #5aaa7a; --green-dark: #1a4d30;
+  --amber: #e8a020; --amber-light: #fff8e8;
+  --red: #d94f4f; --red-light: #fdf0f0;
+  --gray-50: #f8f9fa; --gray-100: #f0f2f0; --gray-200: #e2e6e2;
+  --gray-400: #9aab9a; --gray-600: #5a6b5a; --gray-800: #2a3a2a;
+  --radius: 12px; --shadow: 0 2px 12px rgba(45,122,79,0.08); --shadow-md: 0 4px 20px rgba(45,122,79,0.12);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background: var(--gray-100); color: var(--gray-800); min-height: 100vh; font-size: 15px; }
+.screen { display: none; min-height: 100vh; flex-direction: column; }
+.screen.active { display: flex; }
+.login-bg { background: linear-gradient(160deg, var(--green-dark) 0%, var(--green) 60%, var(--green-mid) 100%); flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; }
+.login-logo { width: 72px; height: 72px; background: rgba(255,255,255,0.15); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; border: 1.5px solid rgba(255,255,255,0.3); }
+.login-title { color: white; font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.login-sub { color: rgba(255,255,255,0.7); font-size: 13px; margin-bottom: 36px; }
+.login-card { background: white; border-radius: 20px; padding: 28px 24px; width: 100%; max-width: 360px; box-shadow: var(--shadow-md); }
+.login-card h2 { font-size: 16px; color: var(--gray-800); margin-bottom: 20px; font-weight: 600; }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 12px; color: var(--gray-600); margin-bottom: 6px; font-weight: 500; }
+.field input { width: 100%; padding: 12px 14px; border: 1.5px solid var(--gray-200); border-radius: 10px; font-size: 15px; font-family: inherit; outline: none; transition: border-color .2s; -webkit-appearance: none; }
+.field input:focus { border-color: var(--green); }
+.btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .15s; -webkit-appearance: none; }
+.btn-primary { background: var(--green); color: white; }
+.btn-primary:active { background: var(--green-dark); transform: scale(.98); }
+.btn-outline { background: transparent; color: var(--green); border: 1.5px solid var(--green); margin-top: 10px; }
+.btn-danger { background: var(--red); color: white; }
+.btn-sm { width: auto; padding: 8px 16px; font-size: 13px; font-weight: 500; border-radius: 8px; }
+.btn-back { width: 100%; padding: 16px; background: var(--gray-50); border: 1.5px solid var(--gray-200); color: var(--gray-600); border-radius: 10px; font-size: 14px; font-family: inherit; cursor: pointer; margin-top: 12px; -webkit-appearance: none; }
+.btn-back:active { background: var(--gray-100); }
+.app-header { background: white; padding: 14px 16px 10px; border-bottom: 1px solid var(--gray-200); position: sticky; top: 0; z-index: 100; }
+.app-header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.app-title { font-size: 16px; font-weight: 700; color: var(--green-dark); }
+.user-badge { background: var(--green-light); color: var(--green-dark); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.admin-badge { background: var(--amber-light); color: #8a5500; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.tabs { display: flex; gap: 0; border-radius: 10px; background: var(--gray-100); padding: 3px; }
+.tab { flex: 1; padding: 9px 6px; text-align: center; font-size: 13px; font-weight: 500; border: none; background: transparent; color: var(--gray-600); border-radius: 8px; cursor: pointer; transition: all .15s; font-family: inherit; }
+.tab.active { background: white; color: var(--green-dark); font-weight: 700; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+.app-content { flex: 1; padding: 16px; overflow-y: auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+.card { background: white; border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); margin-bottom: 14px; }
+.card h3 { font-size: 14px; font-weight: 700; color: var(--green-dark); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+.card h3::before { content: ''; display: inline-block; width: 4px; height: 16px; background: var(--green); border-radius: 2px; }
+.form-row { margin-bottom: 14px; }
+.form-row label { display: block; font-size: 12px; color: var(--gray-600); margin-bottom: 6px; font-weight: 500; }
+.form-row input,.form-row select,.form-row textarea { width: 100%; padding: 11px 13px; border: 1.5px solid var(--gray-200); border-radius: 9px; font-size: 15px; font-family: inherit; outline: none; transition: border-color .2s; background: white; -webkit-appearance: none; color: var(--gray-800); }
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus { border-color: var(--green); }
+.form-row textarea { resize: none; height: 72px; }
+.form-row select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a6b5a' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; padding-right: 36px; }
+.date-display { padding: 11px 13px; background: var(--gray-50); border: 1.5px solid var(--gray-200); border-radius: 9px; font-size: 15px; color: var(--gray-600); }
+.record-item { background: var(--gray-50); border-radius: 9px; padding: 12px 14px; border-left: 3px solid var(--green-mid); margin-bottom: 8px; }
+.record-item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+.record-item-date { font-size: 12px; color: var(--gray-400); }
+.record-item-class { font-size: 12px; font-weight: 600; color: var(--green-dark); background: var(--green-light); padding: 2px 8px; border-radius: 20px; }
+.record-item-book { font-size: 14px; font-weight: 600; color: var(--gray-800); margin-bottom: 2px; }
+.record-item-reader,.record-item-note { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
+.record-actions { display: flex; gap: 6px; margin-top: 8px; }
+.btn-edit { background: var(--green-light); color: var(--green-dark); border: none; padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit; }
+.btn-del { background: var(--red-light); color: var(--red); border: none; padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit; }
+.calendar { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 14px; }
+.cal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--green-dark); }
+.cal-title { color: white; font-size: 15px; font-weight: 700; }
+.cal-nav { background: rgba(255,255,255,.2); border: none; color: white; width: 32px; height: 32px; border-radius: 8px; font-size: 16px; cursor: pointer; }
+.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); }
+.cal-dh { text-align: center; padding: 10px 0 6px; font-size: 11px; color: var(--gray-400); font-weight: 600; }
+.cal-dh.sun { color: var(--red); }
+.cal-dh.sat { color: #3a7abf; }
+.cal-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+.cal-cell.sel span { background: var(--green) !important; color: white !important; border-color: var(--green) !important; }
+.cal-cell.pick { cursor: pointer; }
+.cal-cell.pick span { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--green-light); color: var(--green-dark); font-weight: 600; border: 1.5px solid var(--green-mid); }
+.cal-cell.pick:active span { background: var(--green); color: white; }
+.cal-cell.dim { opacity: .3; }
+.reservation-item { background: var(--green-light); border-radius: 9px; padding: 12px 14px; border-left: 3px solid var(--green); display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.res-date { font-size: 13px; font-weight: 700; color: var(--green-dark); }
+.res-class { font-size: 12px; color: var(--green); margin-top: 2px; }
+.res-who { font-size: 12px; color: var(--gray-600); }
+.btn-cancel { background: white; color: var(--red); border: 1px solid var(--red); padding: 6px 12px; border-radius: 7px; font-size: 12px; cursor: pointer; font-family: inherit; }
+.empty { text-align: center; padding: 32px 16px; color: var(--gray-400); }
+.empty-icon { font-size: 36px; margin-bottom: 8px; }
+.empty p { font-size: 13px; }
+.month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.month-label { font-size: 15px; font-weight: 700; color: var(--green-dark); }
+.month-btn { background: white; border: 1.5px solid var(--gray-200); color: var(--gray-600); width: 34px; height: 34px; border-radius: 9px; font-size: 16px; cursor: pointer; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.tag-chip { background: var(--green-light); color: var(--green-dark); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+.tag-chip button { background: none; border: none; color: var(--green-dark); cursor: pointer; font-size: 14px; line-height: 1; padding: 0; }
+.setting-item { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.setting-item input { flex: 1; padding: 10px 12px; border: 1.5px solid var(--gray-200); border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; }
+.junior-item { background: var(--gray-50); border-radius: 8px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: flex-end; }
+.modal-overlay.active { display: flex; }
+.modal { background: white; border-radius: 20px 20px 0 0; padding: 24px 20px; width: 100%; max-height: 90vh; overflow-y: auto; }
+.modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 18px; color: var(--green-dark); }
+.modal-btns { display: flex; gap: 10px; margin-top: 16px; }
+.modal-btns .btn { flex: 1; }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--gray-800); color: white; padding: 11px 20px; border-radius: 100px; font-size: 13px; font-weight: 500; z-index: 999; transition: transform .3s; white-space: nowrap; pointer-events: none; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+.export-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.export-row select { flex: 1; min-width: 100px; padding: 10px 12px; border: 1.5px solid var(--gray-200); border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; -webkit-appearance: none; background: white; }
+.divider { height: 1px; background: var(--gray-200); margin: 16px 0; }
+.wday-label { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 9px; cursor: pointer; font-weight: 600; font-size: 14px; margin-bottom: 8px; border: 1.5px solid var(--gray-200); background: var(--gray-100); }
+.wday-label.on { background: var(--green-light); border-color: var(--green-mid); color: var(--green-dark); }
+.jr-badge { display: inline-block; background: var(--amber-light); color: #8a5500; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; margin-left: 4px; border: 1px solid #e8c860; }
+.qr-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 13px; background: var(--green-light); color: var(--green-dark); border: 1.5px solid var(--green-mid); border-radius: 10px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="screen active" id="screen-login">
+  <div class="login-bg">
+    <div class="login-logo">
+      <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+        <rect x="6" y="8" width="26" height="22" rx="2" stroke="white" stroke-width="2"/>
+        <path d="M11 14h16M11 18h16M11 22h10" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="login-title">よみきかせ記録</div>
+    <div class="login-sub">読み聞かせボランティア活動管理</div>
+    <div class="login-card">
+      <h2>メンバーログイン</h2>
+      <div class="field"><label>お名前</label><input type="text" id="login-name" placeholder="例：田中 花子" autocomplete="name"></div>
+      <button class="btn btn-primary" onclick="loginUser()">ログイン</button>
+      <button class="btn btn-outline" onclick="showScreen('screen-admin-login')">管理者ログイン</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN -->
+<div class="screen" id="screen-admin-login">
+  <div class="login-bg">
+    <div class="login-logo">
+      <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+        <circle cx="19" cy="14" r="6" stroke="white" stroke-width="2"/>
+        <path d="M7 32c0-6.6 5.4-12 12-12s12 5.4 12 12" stroke="white" stroke-width="2"/>
+      </svg>
+    </div>
+    <div class="login-title">管理者ログイン</div>
+    <div class="login-sub">管理者専用画面</div>
+    <div class="login-card">
+      <h2>管理者認証</h2>
+      <div class="field"><label>管理者パスワード</label><input type="password" id="admin-password" placeholder="パスワードを入力"></div>
+      <button class="btn btn-primary" onclick="loginAdmin()">ログイン</button>
+      <button class="btn-back" onclick="showScreen('screen-login')">← 戻る</button>
+    </div>
+  </div>
+</div>
+
+<!-- USER APP -->
+<div class="screen" id="screen-user">
+  <div class="app-header">
+    <div class="app-header-top">
+      <div class="app-title">📚 よみきかせ記録</div>
+      <div class="user-badge" id="user-badge-name"></div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('user','record')" id="user-tab-record">記録</button>
+      <button class="tab" onclick="switchTab('user','reserve')" id="user-tab-reserve">予約</button>
+    </div>
+  </div>
+  <div class="app-content">
+    <div class="tab-panel active" id="user-panel-record">
+      <div class="card">
+        <h3>活動記録を入力</h3>
+        <div class="form-row"><label>日付</label><div class="date-display" id="record-date-display"></div></div>
+        <div class="form-row"><label>教室</label><select id="record-class"></select></div>
+        <div class="form-row"><label>読んだ本のタイトル</label><input type="text" id="record-book" placeholder="本のタイトルを入力"></div>
+        <div class="form-row"><label>備考</label><textarea id="record-note" placeholder="メモがあれば入力してください"></textarea></div>
+        <button class="btn btn-primary" onclick="submitRecord()">記録を保存</button>
+      </div>
+      <div class="card">
+        <h3>今月の記録</h3>
+        <div class="month-nav">
+          <button class="month-btn" onclick="changeRecordMonth(-1)">←</button>
+          <div class="month-label" id="my-record-month"></div>
+          <button class="month-btn" onclick="changeRecordMonth(1)">→</button>
+        </div>
+        <div id="my-records-list"></div>
+      </div>
+    </div>
+    <div class="tab-panel" id="user-panel-reserve">
+      <div class="calendar" id="user-calendar"></div>
+      <div class="card">
+        <h3>教室を選択して予約</h3>
+        <div class="form-row"><label>選択した日付</label><div class="date-display" id="reserve-selected-date">カレンダーから日付を選んでください</div></div>
+        <div class="form-row"><label>教室</label><select id="reserve-class"></select></div>
+        <button class="btn btn-primary" onclick="submitReservation()">予約する</button>
+      </div>
+      <div class="card"><h3>自分の予約一覧</h3><div id="my-reservations-list"></div></div>
+    </div>
+  </div>
+  <div style="padding:0 16px 24px;"><button class="btn-back" onclick="logoutUser()">← 戻る</button></div>
+</div>
+
+<!-- ADMIN APP -->
+<div class="screen" id="screen-admin">
+  <div class="app-header">
+    <div class="app-header-top">
+      <div class="app-title">📚 よみきかせ記録</div>
+      <div class="admin-badge">管理者</div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('admin','record')" id="admin-tab-record">記録</button>
+      <button class="tab" onclick="switchTab('admin','reserve')" id="admin-tab-reserve">予約</button>
+      <button class="tab" onclick="switchTab('admin','manage')" id="admin-tab-manage">管理</button>
+    </div>
+  </div>
+  <div class="app-content">
+    <div class="tab-panel active" id="admin-panel-record">
+      <div class="card">
+        <h3>活動記録を入力（代理）</h3>
+        <div class="form-row"><label>日付</label><div class="date-display" id="admin-record-date-display"></div></div>
+        <div class="form-row"><label>読んだ人（名前入力）</label><input type="text" id="admin-record-name" placeholder="名前を入力"></div>
+        <div class="form-row"><label>または過去の名前から選択</label><select id="admin-record-name-select" onchange="document.getElementById('admin-record-name').value=this.value"><option value="">— 選択 —</option></select></div>
+        <div class="form-row"><label>教室</label><select id="admin-record-class"></select></div>
+        <div class="form-row"><label>読んだ本のタイトル</label><input type="text" id="admin-record-book" placeholder="本のタイトルを入力"></div>
+        <div class="form-row"><label>備考</label><textarea id="admin-record-note" placeholder="メモがあれば入力"></textarea></div>
+        <button class="btn btn-primary" onclick="adminSubmitRecord()">記録を保存</button>
+      </div>
+      <div class="card">
+        <h3>記録管理</h3>
+        <div class="month-nav">
+          <button class="month-btn" onclick="changeAdminMonth(-1)">←</button>
+          <div class="month-label" id="admin-manage-month"></div>
+          <button class="month-btn" onclick="changeAdminMonth(1)">→</button>
+        </div>
+        <div id="admin-all-records-list"></div>
+      </div>
+    </div>
+    <div class="tab-panel" id="admin-panel-reserve">
+      <div class="calendar" id="admin-calendar"></div>
+      <div class="card">
+        <h3>予約入力（代理）</h3>
+        <div class="form-row"><label>選択した日付</label><div class="date-display" id="admin-reserve-date">カレンダーから日付を選んでください</div></div>
+        <div class="form-row"><label>読んだ人（名前入力）</label><input type="text" id="admin-reserve-name" placeholder="名前を入力"></div>
+        <div class="form-row"><label>または過去の名前から選択</label><select id="admin-reserve-name-select" onchange="document.getElementById('admin-reserve-name').value=this.value"><option value="">— 選択 —</option></select></div>
+        <div class="form-row"><label>教室</label><select id="admin-reserve-class"></select></div>
+        <button class="btn btn-primary" onclick="adminSubmitReservation()">予約する</button>
+      </div>
+      <div class="card"><h3>全員の予約状況</h3><div id="all-reservations-list"></div></div>
+    </div>
+    <div class="tab-panel" id="admin-panel-manage">
+      <div class="card">
+        <h3>CSV書き出し</h3>
+        <div class="export-row">
+          <select id="export-year"></select>
+          <select id="export-month">
+            <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+            <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+            <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+            <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="exportCSV()">📥 CSV書き出し</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>ジュニア登録</h3>
+        <div class="form-row"><label>名前</label><input type="text" id="junior-name" placeholder="ジュニアの名前"></div>
+        <div class="form-row"><label>クラス</label><select id="junior-class"></select></div>
+        <button class="btn btn-primary" onclick="addJunior()">登録する</button>
+        <div class="divider"></div>
+        <div id="junior-list"></div>
+      </div>
+      <div class="card">
+        <h3>教室追加・削除</h3>
+        <div class="tag-list" id="classroom-tag-list"></div>
+        <div class="setting-item">
+          <input type="text" id="new-classroom" placeholder="教室名を入力">
+          <button class="btn btn-primary btn-sm" onclick="addClassroom()">追加</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>予約できる曜日の変更</h3>
+        <div id="weekday-selector" style="margin-bottom:14px;"></div>
+        <button class="btn btn-primary" onclick="saveWeekdays()">保存する</button>
+      </div>
+      <div class="card">
+        <h3>QRコード発行</h3>
+        <p style="font-size:13px;color:var(--gray-600);margin-bottom:12px;">このアプリのQRコードを表示します。メンバーに共有するときに使ってください。</p>
+        <div id="qr-container" style="text-align:center;margin-bottom:12px;"></div>
+        <button class="qr-btn" onclick="showQR()">📱 QRコードを表示する</button>
+      </div>
+      <div class="card">
+        <h3>管理者パスワード変更</h3>
+        <div class="form-row"><label>新しいパスワード</label><input type="password" id="new-password" placeholder="新しいパスワードを入力"></div>
+        <button class="btn btn-primary" onclick="changePassword()">変更する</button>
+      </div>
+    </div>
+  </div>
+  <div style="padding:0 16px 24px;"><button class="btn-back" onclick="logoutAdmin()">← 戻る</button></div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="modal-edit">
+  <div class="modal">
+    <h3>記録を編集</h3>
+    <div class="form-row"><label>読んだ人</label><input type="text" id="edit-reader"></div>
+    <div class="form-row"><label>教室</label><select id="edit-class"></select></div>
+    <div class="form-row"><label>本のタイトル</label><input type="text" id="edit-book"></div>
+    <div class="form-row"><label>備考</label><textarea id="edit-note"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveEdit()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- QR MODAL -->
+<div class="modal-overlay" id="modal-qr">
+  <div class="modal" style="text-align:center;">
+    <h3>📱 QRコード</h3>
+    <p style="font-size:13px;color:var(--gray-600);margin-bottom:16px;">このQRコードをスキャンするとアプリにアクセスできます</p>
+    <div id="qr-display" style="display:flex;justify-content:center;margin-bottom:16px;"></div>
+    <p style="font-size:11px;color:var(--gray-400);margin-bottom:16px;" id="qr-url-label"></p>
+    <button class="btn btn-primary" onclick="closeQR()">閉じる</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbwsjrMGy-8mMqMFqga4NuiA6v1BMi9baT9zjVq5Sc4lLkaSgaMll1ZpnFx4K6PpprpE5Q/exec';
+
+const DB = {
+  get: (k,d) => { try{ const v=localStorage.getItem('yk_'+k); return v?JSON.parse(v):d; }catch(e){ return d; } },
+  set: (k,v) => localStorage.setItem('yk_'+k, JSON.stringify(v))
+};
+
+function syncGAS(type, data) {
+  if (!GAS_URL || GAS_URL.includes('ここに')) return;
+  fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type, data })
+  }).catch(() => {});
+}
+const DEFAULT_CLS = ['1年1組','1年2組','1年3組','1年学年全体','2年1組','2年2組','2年3組','2年学年全体','3年1組','3年2組','3年3組','3年学年全体','4年1組','4年2組','4年3組','4年学年全体','5年1組','5年2組','5年3組','5年学年全体','6年1組','6年2組','6年3組','6年学年全体'];
+const DEFAULT_PW = 'admin1234';
+const getCls = () => DB.get('cls', DEFAULT_CLS);
+const getWd = () => DB.get('wd', [4]);
+const getPw = () => DB.get('pw', DEFAULT_PW);
+const getRecs = () => DB.get('recs', []);
+const getRes = () => DB.get('res', []);
+const saveRecs = v => { DB.set('recs', v); syncGAS('records', v); };
+const saveRes = v => { DB.set('res', v); syncGAS('reservations', v); };
+
+let me = null, isAdmin = false;
+let rMonth = new Date(), aMonth = new Date();
+let uCal = new Date(), aCal = new Date();
+let rDate = null, arDate = null, editId = null;
+
+window.addEventListener('DOMContentLoaded', () => {
+  const su = DB.get('me', null), sa = DB.get('ia', false);
+  if (sa) { isAdmin=true; me='admin'; showScreen('screen-admin'); initAdmin(); }
+  else if (su) { me=su; showScreen('screen-user'); initUser(); }
+  document.getElementById('record-date-display').textContent = fmtD(new Date());
+  document.getElementById('admin-record-date-display').textContent = fmtD(new Date());
+  const ey = document.getElementById('export-year');
+  for(let y=new Date().getFullYear();y>=2020;y--) ey.innerHTML += `<option value="${y}">${y}年</option>`;
+  document.getElementById('export-month').value = new Date().getMonth()+1;
+});
+
+function showScreen(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
+function switchTab(u,t) {
+  document.querySelectorAll(`#screen-${u} .tab`).forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll(`#screen-${u} .tab-panel`).forEach(x=>x.classList.remove('active'));
+  document.getElementById(`${u}-tab-${t}`).classList.add('active');
+  document.getElementById(`${u}-panel-${t}`).classList.add('active');
+}
+
+function loginUser() {
+  const n = document.getElementById('login-name').value.trim();
+  if(!n){ toast('名前を入力してください'); return; }
+  me=n; isAdmin=false; DB.set('me',n); DB.set('ia',false);
+  showScreen('screen-user'); initUser();
+}
+function loginAdmin() {
+  if(document.getElementById('admin-password').value !== getPw()){ toast('パスワードが違います'); return; }
+  isAdmin=true; me='admin'; DB.set('ia',true); DB.set('me','admin');
+  document.getElementById('admin-password').value='';
+  showScreen('screen-admin'); initAdmin();
+}
+function logoutUser() { DB.set('me',null); DB.set('ia',false); me=null; isAdmin=false; document.getElementById('login-name').value=''; showScreen('screen-login'); }
+function logoutAdmin() { logoutUser(); }
+
+function fillSelect(ids, items) { ids.forEach(id=>{ const el=document.getElementById(id); if(!el) return; el.innerHTML=items.map(c=>`<option value="${c}">${c}</option>`).join(''); }); }
+function fillNameDropdowns() {
+  const recNames=[...new Set(getRecs().map(r=>r.reader))].filter(Boolean);
+  const juniors=DB.get('juniors',[]).map(j=>j.name+' (Jr)');
+  const names=[...new Set([...recNames,...juniors])].filter(Boolean);
+  ['admin-record-name-select','admin-reserve-name-select'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.innerHTML='<option value="">— 選択 —</option>'+names.map(n=>`<option value="${n}">${n}</option>`).join('');
+  });
+}
+
+function initUser() {
+  document.getElementById('user-badge-name').textContent = me;
+  fillSelect(['record-class','reserve-class'], getCls());
+  rMonth = new Date();
+  renderMyRecs(); renderMyCal(); renderMyRes();
+}
+function initAdmin() {
+  fillSelect(['admin-record-class','admin-reserve-class','edit-class','junior-class'], getCls());
+  fillNameDropdowns(); renderAdminCal(); renderAdminRecs(); renderAllRes();
+  renderCls(); renderWd(); renderJuniors();
+  aMonth = new Date(); document.getElementById('admin-manage-month').textContent = fmtM(aMonth);
+}
+
+// Records
+function submitRecord() {
+  const book=document.getElementById('record-book').value.trim(), cls=document.getElementById('record-class').value, note=document.getElementById('record-note').value.trim();
+  if(!book){ toast('本のタイトルを入力してください'); return; }
+  const r={id:Date.now(),date:today(),reader:me,classroom:cls,book,note};
+  const recs=getRecs(); recs.push(r); saveRecs(recs);
+  document.getElementById('record-book').value=''; document.getElementById('record-note').value='';
+  toast('記録を保存しました！'); renderMyRecs();
+}
+function adminSubmitRecord() {
+  const name=document.getElementById('admin-record-name').value.trim(), book=document.getElementById('admin-record-book').value.trim(), cls=document.getElementById('admin-record-class').value, note=document.getElementById('admin-record-note').value.trim();
+  if(!name||!book){ toast('名前と本のタイトルを入力してください'); return; }
+  const r={id:Date.now(),date:today(),reader:name,classroom:cls,book,note};
+  const recs=getRecs(); recs.push(r); saveRecs(recs);
+  document.getElementById('admin-record-name').value=''; document.getElementById('admin-record-book').value=''; document.getElementById('admin-record-note').value='';
+  fillNameDropdowns(); toast('記録を保存しました！'); renderAdminRecs();
+}
+
+function renderMyRecs() {
+  document.getElementById('my-record-month').textContent=fmtM(rMonth);
+  const pfx=`${rMonth.getFullYear()}-${pad(rMonth.getMonth()+1)}`;
+  const recs=getRecs().filter(r=>r.reader===me&&r.date.startsWith(pfx));
+  const el=document.getElementById('my-records-list');
+  if(!recs.length){ el.innerHTML=emptyHtml('📖','この月の記録はありません'); return; }
+  el.innerHTML=recs.sort((a,b)=>b.date.localeCompare(a.date)).map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${fmtDS(r.date)}</span><span class="record-item-class">${r.classroom}</span></div><div class="record-item-book">📚 ${r.book}</div>${r.note?`<div class="record-item-note">💬 ${r.note}</div>`:''}</div>`).join('');
+}
+function renderAdminRecs() {
+  document.getElementById('admin-manage-month').textContent=fmtM(aMonth);
+  const pfx=`${aMonth.getFullYear()}-${pad(aMonth.getMonth()+1)}`;
+  const recs=getRecs().filter(r=>r.date.startsWith(pfx));
+  const el=document.getElementById('admin-all-records-list');
+  if(!recs.length){ el.innerHTML=emptyHtml('📖','この月の記録はありません'); return; }
+  el.innerHTML=recs.sort((a,b)=>b.date.localeCompare(a.date)).map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${fmtDS(r.date)}</span><span class="record-item-class">${r.classroom}</span></div><div class="record-item-reader">👤 ${r.reader}</div><div class="record-item-book">📚 ${r.book}</div>${r.note?`<div class="record-item-note">💬 ${r.note}</div>`:''}<div class="record-actions"><button class="btn-edit" onclick="openEdit(${r.id})">編集</button><button class="btn-del" onclick="delRec(${r.id})">削除</button></div></div>`).join('');
+}
+function changeRecordMonth(d) { rMonth.setMonth(rMonth.getMonth()+d); renderMyRecs(); }
+function changeAdminMonth(d) { aMonth.setMonth(aMonth.getMonth()+d); renderAdminRecs(); }
+
+function openEdit(id) {
+  const r=getRecs().find(x=>x.id===id); if(!r) return;
+  editId=id;
+  document.getElementById('edit-reader').value=r.reader;
+  document.getElementById('edit-book').value=r.book;
+  document.getElementById('edit-note').value=r.note||'';
+  fillSelect(['edit-class'],getCls()); document.getElementById('edit-class').value=r.classroom;
+  document.getElementById('modal-edit').classList.add('active');
+}
+function saveEdit() {
+  let recs=getRecs(), i=recs.findIndex(r=>r.id===editId); if(i<0) return;
+  recs[i].reader=document.getElementById('edit-reader').value.trim();
+  recs[i].classroom=document.getElementById('edit-class').value;
+  recs[i].book=document.getElementById('edit-book').value.trim();
+  recs[i].note=document.getElementById('edit-note').value.trim();
+  saveRecs(recs); closeModal(); toast('記録を更新しました'); renderAdminRecs();
+}
+function delRec(id) {
+  if(!confirm('この記録を削除しますか？')) return;
+  saveRecs(getRecs().filter(r=>r.id!==id)); toast('削除しました'); renderAdminRecs();
+}
+function closeModal() { document.getElementById('modal-edit').classList.remove('active'); }
+
+// Calendar
+function buildCal(cid, dt, selDate) {
+  const wd=getWd(), y=dt.getFullYear(), m=dt.getMonth();
+  const todayDt=new Date(); todayDt.setHours(0,0,0,0);
+  const fd=new Date(y,m,1).getDay(), dim=new Date(y,m+1,0).getDate();
+  const dn=['日','月','火','水','木','金','土'];
+  const dc=['sun','','','','','','sat'];
+  let h=`<div class="cal-header"><button class="cal-nav" onclick="shiftCal('${cid}',-1)">←</button><div class="cal-title">${y}年${m+1}月</div><button class="cal-nav" onclick="shiftCal('${cid}',1)">→</button></div><div class="cal-grid">`;
+  dn.forEach((n,i)=>h+=`<div class="cal-dh ${dc[i]}">${n}</div>`);
+  for(let i=0;i<fd;i++) h+='<div class="cal-cell dim"></div>';
+  for(let d=1;d<=dim;d++) {
+    const dt2=new Date(y,m,d); dt2.setHours(0,0,0,0);
+    const ds=`${y}-${pad(m+1)}-${pad(d)}`, dow=dt2.getDay();
+    const pick=wd.includes(dow)&&dt2>=todayDt, sel=selDate===ds;
+    if(pick) h+=`<div class="cal-cell pick${sel?' sel':''}" onclick="selDate('${cid}','${ds}')"><span>${d}</span></div>`;
+    else h+=`<div class="cal-cell dim"><span style="opacity:.4">${d}</span></div>`;
+  }
+  h+='</div>';
+  document.getElementById(cid).innerHTML=h;
+}
+function renderMyCal() { buildCal('user-calendar', uCal, rDate); }
+function renderAdminCal() { buildCal('admin-calendar', aCal, arDate); }
+function shiftCal(id,d) { if(id==='user-calendar'){ uCal.setMonth(uCal.getMonth()+d); renderMyCal(); } else{ aCal.setMonth(aCal.getMonth()+d); renderAdminCal(); } }
+function selDate(cid,ds) {
+  if(cid==='user-calendar'){ rDate=ds; document.getElementById('reserve-selected-date').textContent=fmtDS(ds); renderMyCal(); }
+  else{ arDate=ds; document.getElementById('admin-reserve-date').textContent=fmtDS(ds); renderAdminCal(); }
+}
+
+// Reservations
+function submitReservation() {
+  if(!rDate){ toast('日付を選んでください'); return; }
+  const cls=document.getElementById('reserve-class').value;
+  if(getRes().find(r=>r.date===rDate&&r.classroom===cls&&r.name===me)){ toast('同じ日・教室の予約が既にあります'); return; }
+  const res=getRes(); res.push({id:Date.now(),date:rDate,name:me,classroom:cls}); saveRes(res);
+  toast('予約しました！'); rDate=null;
+  document.getElementById('reserve-selected-date').textContent='カレンダーから日付を選んでください';
+  renderMyCal(); renderMyRes();
+}
+function adminSubmitReservation() {
+  if(!arDate){ toast('日付を選んでください'); return; }
+  const name=document.getElementById('admin-reserve-name').value.trim(), cls=document.getElementById('admin-reserve-class').value;
+  if(!name){ toast('名前を入力してください'); return; }
+  const res=getRes(); res.push({id:Date.now(),date:arDate,name,classroom:cls}); saveRes(res);
+  toast('予約しました！'); arDate=null;
+  document.getElementById('admin-reserve-date').textContent='カレンダーから日付を選んでください';
+  renderAdminCal(); renderAllRes();
+}
+function renderMyRes() {
+  const td=today(), items=getRes().filter(r=>r.name===me&&r.date>=td).sort((a,b)=>a.date.localeCompare(b.date));
+  const el=document.getElementById('my-reservations-list');
+  if(!items.length){ el.innerHTML=emptyHtml('📅','予約はありません'); return; }
+  el.innerHTML=items.map(r=>`<div class="reservation-item"><div><div class="res-date">${fmtDS(r.date)}</div><div class="res-class">${r.classroom}</div></div><button class="btn-cancel" onclick="cancelRes(${r.id})">取消</button></div>`).join('');
+}
+function renderAllRes() {
+  const td=today(), items=getRes().filter(r=>r.date>=td).sort((a,b)=>a.date.localeCompare(b.date));
+  const el=document.getElementById('all-reservations-list');
+  if(!items.length){ el.innerHTML=emptyHtml('📅','予約はありません'); return; }
+  el.innerHTML=items.map(r=>`<div class="reservation-item" style="flex-direction:column;align-items:flex-start;gap:4px;"><div style="display:flex;justify-content:space-between;align-items:center;width:100%;"><div><div class="res-date">${fmtDS(r.date)}</div><div class="res-class">${r.classroom}</div><div class="res-who">👤 ${r.name}</div></div><button class="btn-cancel" onclick="adminCancelRes(${r.id})">取消</button></div></div>`).join('');
+}
+function cancelRes(id){ if(!confirm('予約を取り消しますか？')) return; saveRes(getRes().filter(r=>r.id!==id)); toast('取り消しました'); renderMyRes(); }
+function adminCancelRes(id){ if(!confirm('この予約を取り消しますか？')) return; saveRes(getRes().filter(r=>r.id!==id)); toast('取り消しました'); renderAllRes(); }
+
+// Admin manage
+function renderCls() {
+  document.getElementById('classroom-tag-list').innerHTML=getCls().map(c=>`<div class="tag-chip">${c}<button onclick="removeCls('${c}')">×</button></div>`).join('');
+}
+function addClassroom() {
+  const v=document.getElementById('new-classroom').value.trim(); if(!v) return;
+  const cls=getCls(); if(cls.includes(v)){ toast('既に存在します'); return; }
+  cls.push(v); DB.set('cls',cls); document.getElementById('new-classroom').value='';
+  fillSelect(['admin-record-class','admin-reserve-class','edit-class','junior-class','record-class','reserve-class'],cls);
+  renderCls(); toast('追加しました');
+}
+function removeCls(name) {
+  if(!confirm(`「${name}」を削除しますか？`)) return;
+  const cls=getCls().filter(c=>c!==name); DB.set('cls',cls);
+  fillSelect(['admin-record-class','admin-reserve-class','edit-class','junior-class','record-class','reserve-class'],cls);
+  renderCls(); toast('削除しました');
+}
+function renderWd() {
+  const dnames=['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'];
+  const cur=getWd();
+  document.getElementById('weekday-selector').innerHTML=dnames.map((n,i)=>`<label class="wday-label${cur.includes(i)?' on':''}" id="wdl${i}"><input type="checkbox" value="${i}" ${cur.includes(i)?'checked':''} style="width:18px;height:18px;" onchange="toggleWd(${i},this)">${n}</label>`).join('');
+}
+function toggleWd(i,cb) { const l=document.getElementById('wdl'+i); if(cb.checked) l.classList.add('on'); else l.classList.remove('on'); }
+function saveWeekdays() {
+  const c=[...document.querySelectorAll('#weekday-selector input:checked')].map(x=>parseInt(x.value));
+  if(!c.length){ toast('1つ以上選択してください'); return; }
+  DB.set('wd',c); toast('曜日設定を保存しました'); renderMyCal(); renderAdminCal();
+}
+function addJunior() {
+  const name=document.getElementById('junior-name').value.trim(), cls=document.getElementById('junior-class').value;
+  if(!name){ toast('名前を入力してください'); return; }
+  const list=DB.get('juniors',[]); list.push({id:Date.now(),name,cls}); DB.set('juniors',list);
+  document.getElementById('junior-name').value=''; renderJuniors(); fillNameDropdowns(); toast('登録しました');
+}
+function renderJuniors() {
+  const list=DB.get('juniors',[]), el=document.getElementById('junior-list');
+  if(!list.length){ el.innerHTML='<p style="font-size:13px;color:var(--gray-400)">登録なし</p>'; return; }
+  el.innerHTML=list.map(j=>`
+    <div class="junior-item" id="jr-item-${j.id}">
+      <div><span style="font-weight:600">${j.name}</span><span class="jr-badge">Jr</span><span style="font-size:12px;color:var(--gray-600);margin-left:6px">${j.cls}</span></div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-edit" onclick="editJunior(${j.id})">編集</button>
+        <button class="btn-del btn-sm" onclick="removeJunior(${j.id})">削除</button>
+      </div>
+    </div>
+    <div id="jr-edit-${j.id}" style="display:none;background:var(--green-light);border-radius:9px;padding:12px;margin-bottom:6px;">
+      <div class="form-row" style="margin-bottom:8px;"><label>名前</label><input type="text" id="jr-name-${j.id}" value="${j.name}"></div>
+      <div class="form-row" style="margin-bottom:10px;"><label>クラス</label><select id="jr-cls-${j.id}">${getCls().map(c=>`<option value="${c}"${c===j.cls?' selected':''}>${c}</option>`).join('')}</select></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary btn-sm" onclick="saveJuniorEdit(${j.id})">保存</button>
+        <button class="btn btn-outline btn-sm" onclick="cancelJuniorEdit(${j.id})">キャンセル</button>
+      </div>
+    </div>
+  `).join('');
+}
+function editJunior(id) {
+  document.getElementById('jr-item-'+id).style.display='none';
+  document.getElementById('jr-edit-'+id).style.display='block';
+}
+function cancelJuniorEdit(id) {
+  document.getElementById('jr-item-'+id).style.display='flex';
+  document.getElementById('jr-edit-'+id).style.display='none';
+}
+function saveJuniorEdit(id) {
+  const name=document.getElementById('jr-name-'+id).value.trim();
+  const cls=document.getElementById('jr-cls-'+id).value;
+  if(!name){ toast('名前を入力してください'); return; }
+  const list=DB.get('juniors',[]).map(j=>j.id===id?{...j,name,cls}:j);
+  DB.set('juniors',list); renderJuniors(); fillNameDropdowns(); toast('更新しました');
+}
+function removeJunior(id){ if(!confirm('削除しますか？')) return; DB.set('juniors',DB.get('juniors',[]).filter(j=>j.id!==id)); renderJuniors(); fillNameDropdowns(); toast('削除しました'); }
+function changePassword() {
+  const pw=document.getElementById('new-password').value;
+  if(!pw||pw.length<4){ toast('4文字以上で入力してください'); return; }
+  DB.set('pw',pw); document.getElementById('new-password').value=''; toast('パスワードを変更しました');
+}
+function exportCSV() {
+  const y=document.getElementById('export-year').value, m=document.getElementById('export-month').value;
+  const pfx=`${y}-${pad(m)}`, recs=getRecs().filter(r=>r.date.startsWith(pfx));
+  if(!recs.length){ toast('この月の記録はありません'); return; }
+  const header='日付,読んだ人,教室,本のタイトル,備考';
+  const rows=recs.sort((a,b)=>a.date.localeCompare(b.date)).map(r=>`${r.date},${r.reader},${r.classroom},"${r.book}","${r.note||''}"`);
+  const blob=new Blob(['\uFEFF'+[header,...rows].join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`よみきかせ記録_${y}年${m}月.csv`; a.click();
+  toast('CSVをダウンロードしました');
+}
+
+function showQR() {
+  const url = location.href;
+  document.getElementById('qr-url-label').textContent = url;
+  const container = document.getElementById('qr-display');
+  container.innerHTML = '';
+  const script = document.createElement('script');
+  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+  script.onload = () => {
+    new QRCode(container, { text: url, width: 200, height: 200, colorDark: '#1a4d30', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+  };
+  document.head.appendChild(script);
+  if(typeof QRCode !== 'undefined') {
+    new QRCode(container, { text: url, width: 200, height: 200, colorDark: '#1a4d30', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+  }
+  document.getElementById('modal-qr').classList.add('active');
+}
+function closeQR() { document.getElementById('modal-qr').classList.remove('active'); }
+const pad = n => String(n).padStart(2,'0');
+const today = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const fmtD = d => `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${'日月火水木金土'[d.getDay()]}）`;
+const fmtDS = s => { const [y,m,d]=s.split('-'); const dt=new Date(y,m-1,d); return `${y}年${parseInt(m)}月${parseInt(d)}日（${'日月火水木金土'[dt.getDay()]}）`; };
+const fmtM = d => `${d.getFullYear()}年${d.getMonth()+1}月`;
+const emptyHtml = (icon,msg) => `<div class="empty"><div class="empty-icon">${icon}</div><p>${msg}</p></div>`;
+function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+</script>
+</body>
+</html>
