@@ -362,6 +362,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const su = DB.get('me', null), sa = DB.get('ia', false);
   if (sa) { isAdmin=true; me='admin'; showScreen('screen-admin'); initAdmin(); }
   else if (su) { me=su; showScreen('screen-user'); initUser(); }
+  if (su) { document.getElementById('login-name').value = su; }
   document.getElementById('record-date-display').textContent = fmtD(new Date());
   document.getElementById('admin-record-date-display').textContent = fmtD(new Date());
   const ey = document.getElementById('export-year');
