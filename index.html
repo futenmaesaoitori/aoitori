@@ -443,7 +443,7 @@ function renderMyRecs() {
   const recs=getRecs().filter(r=>r.reader===me&&r.date.startsWith(pfx));
   const el=document.getElementById('my-records-list');
   if(!recs.length){ el.innerHTML=emptyHtml('📖','この月の記録はありません'); return; }
-  el.innerHTML=recs.sort((a,b)=>b.date.localeCompare(a.date)).map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${fmtDS(r.date)}</span><span class="record-item-class">${r.classroom}</span></div><div class="record-item-book">📚 ${r.book}</div>${r.note?`<div class="record-item-note">💬 ${r.note}</div>`:''}</div>`).join('');
+  el.innerHTML=recs.sort((a,b)=>b.date.localeCompare(a.date)).map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${fmtDS(r.date)}</span><span class="record-item-class">${r.classroom}</span></div><div class="record-item-book">📚 ${r.book}</div>${r.note?`<div class="record-item-note">💬 ${r.note}</div>`:''}<div class="record-actions"><button class="btn-edit" onclick="openUserEdit(${r.id})">編集</button></div></div>`).join('');
 }
 function renderAdminRecs() {
   document.getElementById('admin-manage-month').textContent=fmtM(aMonth);
@@ -479,7 +479,24 @@ function delRec(id) {
   saveRecs(getRecs().filter(r=>r.id!==id)); toast('削除しました'); renderAdminRecs();
 }
 function closeModal() { document.getElementById('modal-edit').classList.remove('active'); }
-
+function openUserEdit(id) {
+  const r=getRecs().find(x=>x.id===id); if(!r) return;
+  editId=id;
+  document.getElementById('edit-reader').value=r.reader;
+  document.getElementById('edit-book').value=r.book;
+  document.getElementById('edit-note').value=r.note||'';
+  fillSelect(['edit-class'],getCls()); document.getElementById('edit-class').value=r.classroom;
+  document.getElementById('modal-save-btn').setAttribute('onclick','saveUserEdit()');
+  document.getElementById('modal-edit').classList.add('active');
+}
+function saveUserEdit() {
+  let recs=getRecs(), i=recs.findIndex(r=>r.id===editId); if(i<0) return;
+  recs[i].classroom=document.getElementById('edit-class').value;
+  recs[i].book=document.getElementById('edit-book').value.trim();
+  recs[i].note=document.getElementById('edit-note').value.trim();
+  saveRecs(recs); closeModal(); toast('記録を更新しました'); renderMyRecs();
+}
+  
 // Calendar
 function buildCal(cid, dt, selDate) {
   const wd=getWd(), y=dt.getFullYear(), m=dt.getMonth();
