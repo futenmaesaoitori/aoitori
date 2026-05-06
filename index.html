@@ -360,13 +360,9 @@ let rDate = null, arDate = null, editId = null;
 
 window.addEventListener('DOMContentLoaded', () => {
   const su = DB.get('me', null), sa = DB.get('ia', false);
-  if (sa) { isAdmin=true; me='admin'; showScreen('screen-admin'); initAdmin(); }
   if (su) { document.getElementById('login-name').value = su; }
+  if (sa) { isAdmin=true; me='admin'; showScreen('screen-admin'); initAdmin(); }
   else if (su) { me=su; showScreen('screen-user'); initUser(); }
- if (su) { document.getElementById('login-name').value = su; }
-if (sa) { isAdmin=true; me='admin'; showScreen('screen-admin'); initAdmin(); }
-if (su) { document.getElementById('login-name').value = su; }
-else if (su) { me=su; showScreen('screen-user'); initUser(); }
   document.getElementById('record-date-display').textContent = fmtD(new Date());
   document.getElementById('admin-record-date-display').textContent = fmtD(new Date());
   const ey = document.getElementById('export-year');
