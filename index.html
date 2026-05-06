@@ -309,7 +309,7 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
     <div class="form-row"><label>備考</label><textarea id="edit-note"></textarea></div>
     <div class="modal-btns">
       <button class="btn btn-outline" onclick="closeModal()">キャンセル</button>
-      <button class="btn btn-primary" onclick="saveEdit()">保存する</button>
+      <button class="btn btn-primary" id="modal-save-btn" onclick="saveEdit()">保存する</button>
     </div>
   </div>
 </div>
@@ -463,6 +463,7 @@ function openEdit(id) {
   document.getElementById('edit-book').value=r.book;
   document.getElementById('edit-note').value=r.note||'';
   fillSelect(['edit-class'],getCls()); document.getElementById('edit-class').value=r.classroom;
+  document.getElementById('modal-save-btn').setAttribute('onclick','saveEdit()');
   document.getElementById('modal-edit').classList.add('active');
 }
 function saveEdit() {
