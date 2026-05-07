@@ -445,22 +445,8 @@ function checkReservationConflict() {
     btn.textContent='予約する'; btn.disabled=false; btn.style.opacity='1';
   }
 }
-  const td=today(), items=getRes().filter(r=>r.date>=td).sort((a,b)=>a.date.localeCompare(b.date));
-  const el=document.getElementById('user-all-reservations-list'); if(!el) return;
-  if(!items.length){ el.innerHTML=emptyHtml('📅','予約はありません'); return; }
-  el.innerHTML=items.map(r=>`
-    <div class="reservation-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
-        <div>
-          <div class="res-date">${fmtDS(r.date)}</div>
-          <div class="res-class">${r.classroom}</div>
-          <div class="res-who">👤 ${r.name}</div>
-        </div>
-        ${r.name===me?`<button class="btn-cancel" onclick="cancelRes(${r.id})">取消</button>`:''}
-      </div>
-    </div>`).join('');
-}
-  function cancelRes(id){ if(!confirm('予約を取り消しますか？')) return; saveRes(getRes().filter(r=>r.id!==id)); toast('取り消しました'); renderMyRes(); renderUserAllRes(); }
+  function cancelRes(id){ if(!confirm('予約を取り消しますか？')) return; 
+  saveRes(getRes().filter(r=>r.id!==id)); toast('取り消しました'); renderMyRes(); renderUserAllRes(); }
 // Records
 function submitRecord() {
   const book=document.getElementById('record-book').value.trim(), cls=document.getElementById('record-class').value, note=document.getElementById('record-note').value.trim();
@@ -563,8 +549,10 @@ const pick=wd.includes(dow)&&dt2>=todayDt&&!blocked, sel=selDate===ds;
 function renderMyCal() { buildCal('user-calendar', uCal, rDate); }
 function renderAdminCal() { buildCal('admin-calendar', aCal, arDate); }
 function shiftCal(id,d) { if(id==='user-calendar'){ uCal.setMonth(uCal.getMonth()+d); renderMyCal(); } else{ aCal.setMonth(aCal.getMonth()+d); renderAdminCal(); } }
-function selDate(cid,ds) 
-  function selDate(cid,ds) {
+function selDate(cid,ds) {
+  if(cid==='user-calendar'){ rDate=ds; document.getElementById('reserve-selected-date').textContent=fmtDS(ds); renderMyCal(); checkReservationConflict(); }
+  else{ arDate=ds; document.getElementById('admin-reserve-date').textContent=fmtDS(ds); renderAdminCal(); }
+}
   if(cid==='user-calendar'){ rDate=ds; document.getElementById('reserve-selected-date').textContent=fmtDS(ds); renderMyCal(); checkReservationConflict(); }
   else{ arDate=ds; document.getElementById('admin-reserve-date').textContent=fmtDS(ds); renderAdminCal(); }
 }
@@ -593,7 +581,7 @@ function renderAllRes() {
   if(!items.length){ el.innerHTML=emptyHtml('📅','予約はありません'); return; }
   el.innerHTML=items.map(r=>`<div class="reservation-item" style="flex-direction:column;align-items:flex-start;gap:4px;"><div style="display:flex;justify-content:space-between;align-items:center;width:100%;"><div><div class="res-date">${fmtDS(r.date)}</div><div class="res-class">${r.classroom}</div><div class="res-who">👤 ${r.name}</div></div><button class="btn-cancel" onclick="adminCancelRes(${r.id})">取消</button></div></div>`).join('');
 }
-function cancelRes(id){ if(!confirm('予約を取り消しますか？')) return; saveRes(gtRes().filter(r=>r.id!==id)); toast('取り消しました'); renderMyRes(); }
+function cancelRes(id){ if(!confirm('予約を取り消しますか？')) return; saveRes(getRes().filter(r=>r.id!==id)); toast('取り消しました'); renderMyRes(); }
 function adminCancelRes(id){ if(!confirm('この予約を取り消しますか？')) return; saveRes(getRes().filter(r=>r.id!==id)); toast('取り消しました'); renderAllRes(); }
 
 // Admin manage
