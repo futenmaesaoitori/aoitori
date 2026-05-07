@@ -553,9 +553,6 @@ function selDate(cid,ds) {
   if(cid==='user-calendar'){ rDate=ds; document.getElementById('reserve-selected-date').textContent=fmtDS(ds); renderMyCal(); checkReservationConflict(); }
   else{ arDate=ds; document.getElementById('admin-reserve-date').textContent=fmtDS(ds); renderAdminCal(); }
 }
-  if(cid==='user-calendar'){ rDate=ds; document.getElementById('reserve-selected-date').textContent=fmtDS(ds); renderMyCal(); checkReservationConflict(); }
-  else{ arDate=ds; document.getElementById('admin-reserve-date').textContent=fmtDS(ds); renderAdminCal(); }
-}
 
 // Reservations
 function submitReservation() {
