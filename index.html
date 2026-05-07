@@ -413,20 +413,54 @@ function fillNameDropdowns() {
     el.innerHTML='<option value="">— 選択 —</option>'+names.map(n=>`<option value="${n}">${n}</option>`).join('');
   });
 }
-
 function initUser() {
   document.getElementById('user-badge-name').textContent = me;
   fillSelect(['record-class','reserve-class'], getCls());
   rMonth = new Date();
-  renderMyRecs(); renderMyCal(); renderMyRes();
+  renderMyRecs(); renderMyCal(); renderMyRes(); renderUserAllRes();
 }
-function initAdmin() {
-  fillSelect(['admin-record-class','admin-reserve-class','edit-class','junior-class'], getCls());
-  fillNameDropdowns(); renderAdminCal(); renderAdminRecs(); renderAllRes();
-  renderCls(); renderWd(); renderJuniors();
-  aMonth = new Date(); document.getElementById('admin-manage-month').textContent = fmtM(aMonth);
+ function renderUserAllRes() {
+  const td=today(), items=getRes().filter(r=>r.date>=td).sort((a,b)=>a.date.localeCompare(b.date));
+  const el=document.getElementById('user-all-reservations-list'); if(!el) return;
+  if(!items.length){ el.innerHTML=emptyHtml('📅','予約はありません'); return; }
+  el.innerHTML=items.map(r=>`
+    <div class="reservation-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+        <div>
+          <div class="res-date">${fmtDS(r.date)}</div>
+          <div class="res-class">${r.classroom}</div>
+          <div class="res-who">👤 ${r.name}</div>
+        </div>
+        ${r.name===me?`<button class="btn-cancel" onclick="cancelRes(${r.id})">取消</button>`:''}
+      </div>
+    </div>`).join('');
 }
-
+function checkReservationConflict() {
+  if(!rDate) return;
+  const cls=document.getElementById('reserve-class').value;
+  const btn=document.querySelector('#user-panel-reserve .btn-primary[onclick="submitReservation()"]');
+  if(getRes().find(r=>r.date===rDate&&r.classroom===cls)){
+    btn.textContent='この教室はすでに予約済みです'; btn.disabled=true; btn.style.opacity='0.5';
+  } else {
+    btn.textContent='予約する'; btn.disabled=false; btn.style.opacity='1';
+  }
+}
+  const td=today(), items=getRes().filter(r=>r.date>=td).sort((a,b)=>a.date.localeCompare(b.date));
+  const el=document.getElementById('user-all-reservations-list'); if(!el) return;
+  if(!items.length){ el.innerHTML=emptyHtml('📅','予約はありません'); return; }
+  el.innerHTML=items.map(r=>`
+    <div class="reservation-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+        <div>
+          <div class="res-date">${fmtDS(r.date)}</div>
+          <div class="res-class">${r.classroom}</div>
+          <div class="res-who">👤 ${r.name}</div>
+        </div>
+        ${r.name===me?`<button class="btn-cancel" onclick="cancelRes(${r.id})">取消</button>`:''}
+      </div>
+    </div>`).join('');
+}
+  function cancelRes(id){ if(!confirm('予約を取り消しますか？')) return; saveRes(getRes().filter(r=>r.id!==id)); toast('取り消しました'); renderMyRes(); renderUserAllRes(); }
 // Records
 function submitRecord() {
   const book=document.getElementById('record-book').value.trim(), cls=document.getElementById('record-class').value, note=document.getElementById('record-note').value.trim();
@@ -518,7 +552,8 @@ function buildCal(cid, dt, selDate) {
   for(let d=1;d<=dim;d++) {
     const dt2=new Date(y,m,d); dt2.setHours(0,0,0,0);
     const ds=`${y}-${pad(m+1)}-${pad(d)}`, dow=dt2.getDay();
-    const pick=wd.includes(dow)&&dt2>=todayDt, sel=selDate===ds;
+const blocked=getBlockedDates().includes(ds);
+const pick=wd.includes(dow)&&dt2>=todayDt&&!blocked, sel=selDate===ds;
     if(pick) h+=`<div class="cal-cell pick${sel?' sel':''}" onclick="selDate('${cid}','${ds}')"><span>${d}</span></div>`;
     else h+=`<div class="cal-cell dim"><span style="opacity:.4">${d}</span></div>`;
   }
@@ -528,8 +563,9 @@ function buildCal(cid, dt, selDate) {
 function renderMyCal() { buildCal('user-calendar', uCal, rDate); }
 function renderAdminCal() { buildCal('admin-calendar', aCal, arDate); }
 function shiftCal(id,d) { if(id==='user-calendar'){ uCal.setMonth(uCal.getMonth()+d); renderMyCal(); } else{ aCal.setMonth(aCal.getMonth()+d); renderAdminCal(); } }
-function selDate(cid,ds) {
-  if(cid==='user-calendar'){ rDate=ds; document.getElementById('reserve-selected-date').textContent=fmtDS(ds); renderMyCal(); }
+function selDate(cid,ds) 
+  function selDate(cid,ds) {
+  if(cid==='user-calendar'){ rDate=ds; document.getElementById('reserve-selected-date').textContent=fmtDS(ds); renderMyCal(); checkReservationConflict(); }
   else{ arDate=ds; document.getElementById('admin-reserve-date').textContent=fmtDS(ds); renderAdminCal(); }
 }
 
@@ -537,20 +573,13 @@ function selDate(cid,ds) {
 function submitReservation() {
   if(!rDate){ toast('日付を選んでください'); return; }
   const cls=document.getElementById('reserve-class').value;
-  if(getRes().find(r=>r.date===rDate&&r.classroom===cls&&r.name===me)){ toast('同じ日・教室の予約が既にあります'); return; }
+  if(getRes().find(r=>r.date===rDate&&r.classroom===cls)){
+    toast('その日・教室はすでに予約が入っています'); return;
+  }
   const res=getRes(); res.push({id:Date.now(),date:rDate,name:me,classroom:cls}); saveRes(res);
   toast('予約しました！'); rDate=null;
   document.getElementById('reserve-selected-date').textContent='カレンダーから日付を選んでください';
-  renderMyCal(); renderMyRes();
-}
-function adminSubmitReservation() {
-  if(!arDate){ toast('日付を選んでください'); return; }
-  const name=document.getElementById('admin-reserve-name').value.trim(), cls=document.getElementById('admin-reserve-class').value;
-  if(!name){ toast('名前を入力してください'); return; }
-  const res=getRes(); res.push({id:Date.now(),date:arDate,name,classroom:cls}); saveRes(res);
-  toast('予約しました！'); arDate=null;
-  document.getElementById('admin-reserve-date').textContent='カレンダーから日付を選んでください';
-  renderAdminCal(); renderAllRes();
+  renderMyCal(); renderMyRes(); renderUserAllRes();
 }
 function renderMyRes() {
   const td=today(), items=getRes().filter(r=>r.name===me&&r.date>=td).sort((a,b)=>a.date.localeCompare(b.date));
@@ -564,7 +593,7 @@ function renderAllRes() {
   if(!items.length){ el.innerHTML=emptyHtml('📅','予約はありません'); return; }
   el.innerHTML=items.map(r=>`<div class="reservation-item" style="flex-direction:column;align-items:flex-start;gap:4px;"><div style="display:flex;justify-content:space-between;align-items:center;width:100%;"><div><div class="res-date">${fmtDS(r.date)}</div><div class="res-class">${r.classroom}</div><div class="res-who">👤 ${r.name}</div></div><button class="btn-cancel" onclick="adminCancelRes(${r.id})">取消</button></div></div>`).join('');
 }
-function cancelRes(id){ if(!confirm('予約を取り消しますか？')) return; saveRes(getRes().filter(r=>r.id!==id)); toast('取り消しました'); renderMyRes(); }
+function cancelRes(id){ if(!confirm('予約を取り消しますか？')) return; saveRes(gtRes().filter(r=>r.id!==id)); toast('取り消しました'); renderMyRes(); }
 function adminCancelRes(id){ if(!confirm('この予約を取り消しますか？')) return; saveRes(getRes().filter(r=>r.id!==id)); toast('取り消しました'); renderAllRes(); }
 
 // Admin manage
@@ -638,7 +667,24 @@ function saveJuniorEdit(id) {
   DB.set('juniors',list); renderJuniors(); fillNameDropdowns(); toast('更新しました');
 }
 function removeJunior(id){ if(!confirm('削除しますか？')) return; DB.set('juniors',DB.get('juniors',[]).filter(j=>j.id!==id)); renderJuniors(); fillNameDropdowns(); toast('削除しました'); }
-function changePassword() {
+function getBlockedDates() { return DB.get('blocked', []); }
+function addBlockedDate() {
+  const v=document.getElementById('blocked-date-input').value; if(!v){ toast('日付を選んでください'); return; }
+  const list=getBlockedDates(); if(list.includes(v)){ toast('既に登録されています'); return; }
+  list.push(v); DB.set('blocked',list);
+  document.getElementById('blocked-date-input').value='';
+  renderBlockedDates(); renderMyCal(); renderAdminCal(); toast('予約不可日を追加しました');
+}
+function renderBlockedDates() {
+  const list=getBlockedDates(), el=document.getElementById('blocked-dates-list');
+  if(!list.length){ el.innerHTML='<p style="font-size:13px;color:var(--gray-400)">登録なし</p>'; return; }
+  el.innerHTML=list.sort().map(d=>`<div class="tag-chip">${fmtDS(d)}<button onclick="removeBlockedDate('${d}')">×</button></div>`).join('');
+}
+function removeBlockedDate(d) {
+  DB.set('blocked',getBlockedDates().filter(x=>x!==d));
+  renderBlockedDates(); renderMyCal(); renderAdminCal(); toast('削除しました');
+}
+  function changePassword() {
   const pw=document.getElementById('new-password').value;
   if(!pw||pw.length<4){ toast('4文字以上で入力してください'); return; }
   DB.set('pw',pw); document.getElementById('new-password').value=''; toast('パスワードを変更しました');
