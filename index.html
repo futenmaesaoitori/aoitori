@@ -412,6 +412,12 @@ function fillNameDropdowns() {
     const el=document.getElementById(id); if(!el) return;
     el.innerHTML='<option value="">— 選択 —</option>'+names.map(n=>`<option value="${n}">${n}</option>`).join('');
   });
+}function initAdmin() {
+  const cls = getCls();
+  fillSelect(['admin-record-class','admin-reserve-class','edit-class','junior-class','record-class','reserve-class'], cls);
+  fillNameDropdowns(); renderAdminCal(); renderAdminRecs(); renderAllRes();
+  renderCls(); renderWd(); renderJuniors(); renderBlockedDates();
+  aMonth = new Date(); document.getElementById('admin-manage-month').textContent = fmtM(aMonth);
 }
 function initUser() {
   document.getElementById('user-badge-name').textContent = me;
