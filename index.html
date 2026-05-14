@@ -444,9 +444,6 @@ function initUser() {
 function checkReservationConflict() {
   const btn=document.querySelector('#user-panel-reserve .btn-primary[onclick="submitReservation()"]');
   if(!btn) return;
-  function checkReservationConflict() {
-  const btn=document.querySelector('#user-panel-reserve .btn-primary[onclick="submitReservation()"]');
-  if(!btn) return;
   if(!rDate){ btn.textContent='予約する'; btn.disabled=false; btn.style.opacity='1'; return; }
   const cls=document.getElementById('reserve-class').value;
   if(getRes().find(r=>r.date===rDate&&r.classroom===cls)){
