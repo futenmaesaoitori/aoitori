@@ -446,7 +446,6 @@ function checkReservationConflict() {
   if(!btn) return;
   if(!rDate){ btn.textContent='予約する'; btn.disabled=false; btn.style.opacity='1'; return; }
   const cls=document.getElementById('reserve-class').value;
-  const btn=document.querySelector('#user-panel-reserve .btn-primary[onclick="submitReservation()"]');
   if(getRes().find(r=>r.date===rDate&&r.classroom===cls)){
     btn.textContent='この教室はすでに予約済みです'; btn.disabled=true; btn.style.opacity='0.5';
   } else {
