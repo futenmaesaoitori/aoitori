@@ -347,9 +347,24 @@ const DB = {
 
 function syncGAS(type, data) {
   if (!GAS_URL || GAS_URL.includes('ここに')) return;
-  const payload = encodeURIComponent(JSON.stringify({ type, data }));
-  const img = new Image();
-  img.src = GAS_URL + '?payload=' + payload;
+
+  // 現代的な通信方法（fetch API）を使って、データを安全にPOST送信します
+  fetch(GAS_URL, {
+    method: 'POST',
+    // 異なるドメイン（Google）への送信でエラーを起こさないための設定
+    mode: 'no-cors', 
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    // データを文字数の制限がない「ボディ」に入れて送信します
+    body: JSON.stringify({ type, data })
+  })
+  .then(() => {
+    console.log('GASへのデータ送信処理が実行されました（' + type + '）');
+  })
+  .catch(error => {
+    console.error('通信エラーが発生しました:', error);
+  });
 }
   
 const DEFAULT_CLS = ['1年1組','1年2組','1年3組','1年学年全体','2年1組','2年2組','2年3組','2年学年全体','3年1組','3年2組','3年3組','3年学年全体','4年1組','4年2組','4年3組','4年学年全体','5年1組','5年2組','5年3組','5年学年全体','6年1組','6年2組','6年3組','6年学年全体'];
