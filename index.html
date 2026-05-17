@@ -344,7 +344,44 @@ const DB = {
   get: (k,d) => { try{ const v=localStorage.getItem('yk_'+k); return v?JSON.parse(v):d; }catch(e){ return d; } },
   set: (k,v) => localStorage.setItem('yk_'+k, JSON.stringify(v))
 };
+function doGet(e) {
+  const res = ContentService.createTextOutput();
+  res.setMimeType(ContentService.MimeType.JSON);
 
+  try {
+    // payloadパラメータがある場合はデータ保存処理
+    if (e.parameter.payload) {
+      const data = JSON.parse(decodeURIComponent(e.parameter.payload));
+      const type = data.type;
+      if (type === 'records') {
+        saveSheet(SHEET_RECORDS, data.data, ['id','date','reader','classroom','book','note']);
+      } else if (type === 'reservations') {
+        saveSheet(SHEET_RESERVATIONS, data.data, ['id','date','name','classroom']);
+      }
+      res.setContent(JSON.stringify({ ok: true }));
+      return res;
+    }
+
+    // 通常のデータ読み込み処理
+    const type = e.parameter.type;
+    let result = {};
+    if (type === 'records') {
+      result = { data: readSheet(SHEET_RECORDS, ['id','date','reader','classroom','book','note']) };
+    } else if (type === 'reservations') {
+      result = { data: readSheet(SHEET_RESERVATIONS, ['id','date','name','classroom']) };
+    } else if (type === 'all') {
+      result = {
+        records: readSheet(SHEET_RECORDS, ['id','date','reader','classroom','book','note']),
+        reservations: readSheet(SHEET_RESERVATIONS, ['id','date','name','classroom']),
+      };
+    }
+    res.setContent(JSON.stringify({ ok: true, ...result }));
+  } catch(err) {
+    res.setContent(JSON.stringify({ ok: false, error: err.message }));
+  }
+  return res;
+}
+    
 function syncGAS(type, data) {
   if (!GAS_URL || GAS_URL.includes('ここに')) return;
   const payload = encodeURIComponent(JSON.stringify({ type, data }));
