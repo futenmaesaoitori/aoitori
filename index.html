@@ -196,7 +196,7 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
         <button class="btn btn-primary" onclick="submitReservation()">予約する</button>
       </div>
       <div class="card"><h3>自分の予約一覧</h3><div id="my-reservations-list"></div></div>
-<div class="card"><h3>全員の予約状況</h3><div id="user-all-reservations-list"></div></div>
+      <div class="card"><h3>全員の予約状況</h3><div id="user-all-reservations-list"></div></div>
     </div>
   </div>
   <div style="padding:0 16px 24px;"><button class="btn-back" onclick="logoutUser()">← 戻る</button></div>
@@ -290,15 +290,15 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
         <div id="qr-container" style="text-align:center;margin-bottom:12px;"></div>
         <button class="qr-btn" onclick="showQR()">📱 QRコードを表示する</button>
       </div>
-  <div class="card">
-  <h3>予約不可日の設定</h3>
-  <p style="font-size:13px;color:var(--gray-600);margin-bottom:12px;">予約できないようにしたい日付を登録します。</p>
-  <div id="blocked-dates-list" style="margin-bottom:12px;"></div>
-  <div class="setting-item">
-    <input type="date" id="blocked-date-input" style="flex:1;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:14px;font-family:inherit;outline:none;">
-    <button class="btn btn-primary btn-sm" onclick="addBlockedDate()">追加</button>
-  </div>
-</div>
+      <div class="card">
+        <h3>予約不可日の設定</h3>
+        <p style="font-size:13px;color:var(--gray-600);margin-bottom:12px;">予約できないようにしたい日付を登録します。</p>
+        <div id="blocked-dates-list" style="margin-bottom:12px;"></div>
+        <div class="setting-item">
+          <input type="date" id="blocked-date-input" style="flex:1;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:14px;font-family:inherit;outline:none;">
+          <button class="btn btn-primary btn-sm" onclick="addBlockedDate()">追加</button>
+        </div>
+      </div>
       <div class="card">
         <h3>管理者パスワード変更</h3>
         <div class="form-row"><label>新しいパスワード</label><input type="password" id="new-password" placeholder="新しいパスワードを入力"></div>
@@ -344,64 +344,7 @@ const DB = {
   get: (k,d) => { try{ const v=localStorage.getItem('yk_'+k); return v?JSON.parse(v):d; }catch(e){ return d; } },
   set: (k,v) => localStorage.setItem('yk_'+k, JSON.stringify(v))
 };
-function doGet(e) {
-  const res = ContentService.createTextOutput();
-  res.setMimeType(ContentService.MimeType.JSON);
 
-  try {
-    // payloadパラメータがある場合はデータ保存処理
-    if (e.parameter.payload) {
-      const data = JSON.parse(decodeURIComponent(e.parameter.payload));
-      const type = data.type;
-      if (type === 'records') {
-        saveSheet(SHEET_RECORDS, data.data, ['id','date','reader','classroom','book','note']);
-      } else if (type === 'reservations') {
-        saveSheet(SHEET_RESERVATIONS, data.data, ['id','date','name','classroom']);
-      }
-      res.setContent(JSON.stringify({ ok: true }));
-      return res;
-    }
-
-    // 通常のデータ読み込み処理
-    const type = e.parameter.type;
-    let result = {};
-    if (type === 'records') {
-      result = { data: readSheet(SHEET_RECORDS, ['id','date','reader','classroom','book','note']) };
-    } else if (type === 'reservations') {
-      result = { data: readSheet(SHEET_RESERVATIONS, ['id','date','name','classroom']) };
-    } else if (type === 'all') {
-      result = {
-        records: readSheet(SHEET_RECORDS, ['id','date','reader','classroom','book','note']),
-        reservations: readSheet(SHEET_RESERVATIONS, ['id','date','name','classroom']),
-      };
-    }
-    res.setContent(JSON.stringify({ ok: true, ...result }));
-  } catch(err) {
-    res.setContent(JSON.stringify({ ok: false, error: err.message }));
-  }
-  return res;
-}
-
-    // 通常のデータ読み込み処理
-    const type = e.parameter.type;
-    let result = {};
-    if (type === 'records') {
-      result = { data: readSheet(SHEET_RECORDS, ['id','date','reader','classroom','book','note']) };
-    } else if (type === 'reservations') {
-      result = { data: readSheet(SHEET_RESERVATIONS, ['id','date','name','classroom']) };
-    } else if (type === 'all') {
-      result = {
-        records: readSheet(SHEET_RECORDS, ['id','date','reader','classroom','book','note']),
-        reservations: readSheet(SHEET_RESERVATIONS, ['id','date','name','classroom']),
-      };
-    }
-    res.setContent(JSON.stringify({ ok: true, ...result }));
-  } catch(err) {
-    res.setContent(JSON.stringify({ ok: false, error: err.message }));
-  }
-  return res;
-}
-    
 function syncGAS(type, data) {
   if (!GAS_URL || GAS_URL.includes('ここに')) return;
   const payload = encodeURIComponent(JSON.stringify({ type, data }));
@@ -424,9 +367,17 @@ let rMonth = new Date(), aMonth = new Date();
 let uCal = new Date(), aCal = new Date();
 let rDate = null, arDate = null, editId = null;
 
+// 便利関数
+const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const fmtD = d => `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+const fmtM = d => `${d.getFullYear()}年${d.getMonth()+1}月`;
+const fmtDS = s => { const parts = s.split('-'); return `${parts[1]}月${parts[2]}日`; };
+const emptyHtml = (icon, txt) => `<div class="empty"><div class="empty-icon">${icon}</div><p>${txt}</p></div>`;
+function toast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+
 window.addEventListener('DOMContentLoaded', () => {
   const su = DB.get('me', null), sa = DB.get('ia', false);
-  if (su) { document.getElementById('login-name').value = su; }
+  if (su && su !== 'admin') { document.getElementById('login-name').value = su; }
   if (sa) { isAdmin=true; me='admin'; showScreen('screen-admin'); initAdmin(); }
   else if (su) { me=su; showScreen('screen-user'); initUser(); }
   document.getElementById('record-date-display').textContent = fmtD(new Date());
@@ -444,6 +395,7 @@ function switchTab(u,t) {
   document.getElementById(`${u}-panel-${t}`).classList.add('active');
 }
 
+// 認証
 function loginUser() {
   const n = document.getElementById('login-name').value.trim();
   if(!n){ toast('名前を入力してください'); return; }
@@ -457,7 +409,7 @@ function loginAdmin() {
   showScreen('screen-admin'); initAdmin();
 }
 function logoutUser() { DB.set('me',null); DB.set('ia',false); me=null; isAdmin=false; document.getElementById('login-name').value=''; showScreen('screen-login'); }
-function logoutAdmin() { logoutUser(); }
+function logoutAdmin() { logoutUser(); showScreen('screen-login'); }
 
 function fillSelect(ids, items) { ids.forEach(id=>{ const el=document.getElementById(id); if(!el) return; el.innerHTML=items.map(c=>`<option value="${c}">${c}</option>`).join(''); }); }
 function fillNameDropdowns() {
@@ -469,7 +421,7 @@ function fillNameDropdowns() {
     el.innerHTML='<option value="">— 選択 —</option>'+names.map(n=>`<option value="${n}">${n}</option>`).join('');
   });
 }
-  function initAdmin() {
+function initAdmin() {
   const cls = getCls();
   fillSelect(['admin-record-class','admin-reserve-class','edit-class','junior-class','record-class','reserve-class'], cls);
   fillNameDropdowns(); renderAdminCal(); renderAdminRecs(); renderAllRes();
@@ -482,7 +434,8 @@ function initUser() {
   rMonth = new Date();
   renderMyRecs(); renderMyCal(); renderMyRes(); renderUserAllRes();
 }
- function renderUserAllRes() {
+
+function renderUserAllRes() {
   const td=today(), items=getRes().filter(r=>r.date>=td).sort((a,b)=>a.date.localeCompare(b.date));
   const el=document.getElementById('user-all-reservations-list'); if(!el) return;
   if(!items.length){ el.innerHTML=emptyHtml('📅','予約はありません'); return; }
@@ -498,8 +451,9 @@ function initUser() {
       </div>
     </div>`).join('');
 }
+
 function checkReservationConflict() {
-  const btn=document.querySelector('#user-panel-reserve .btn-primary[onclick="submitReservation()"]');
+  const btn=document.querySelector('#user-panel-reserve .btn-primary');
   if(!btn) return;
   if(!rDate){ btn.textContent='予約する'; btn.disabled=false; btn.style.opacity='1'; return; }
   const cls=document.getElementById('reserve-class').value;
@@ -509,270 +463,161 @@ function checkReservationConflict() {
     btn.textContent='予約する'; btn.disabled=false; btn.style.opacity='1';
   }
 }
-  function cancelRes(id){ if(!confirm('予約を取り消しますか？')) return; 
-  saveRes(getRes().filter(r=>r.id!==id)); toast('取り消しました'); renderMyRes(); renderUserAllRes(); }
-// Records
+function cancelRes(id){ if(!confirm('予約を取り消しますか？')) return; 
+  saveRes(getRes().filter(r=>r.id!==id)); toast('取り消しました'); renderMyRes(); renderUserAllRes(); if(isAdmin){renderAllRes();renderAdminCal();}else{renderMyCal();} }
+
+// 活動記録の保存
 function submitRecord() {
-  const book=document.getElementById('record-book').value.trim(), cls=document.getElementById('record-class').value, note=document.getElementById('record-note').value.trim();
+  const book=document.getElementById('record-book').value.trim();
+  const cls=document.getElementById('record-class').value;
+  const note=document.getElementById('record-note').value.trim();
   if(!book){ toast('本のタイトルを入力してください'); return; }
-  const r={id:Date.now(),date:today(),reader:me,classroom:cls,book,note};
-  const recs=getRecs(); recs.push(r); saveRecs(recs);
-  document.getElementById('record-book').value=''; document.getElementById('record-note').value='';
-  toast('記録を保存しました！'); renderMyRecs();
-}
-function adminSubmitRecord() {
-  const name=document.getElementById('admin-record-name').value.trim(), book=document.getElementById('admin-record-book').value.trim(), cls=document.getElementById('admin-record-class').value, note=document.getElementById('admin-record-note').value.trim();
-  if(!name||!book){ toast('名前と本のタイトルを入力してください'); return; }
-  const r={id:Date.now(),date:today(),reader:name,classroom:cls,book,note};
-  const recs=getRecs(); recs.push(r); saveRecs(recs);
-  document.getElementById('admin-record-name').value=''; document.getElementById('admin-record-book').value=''; document.getElementById('admin-record-note').value='';
-  fillNameDropdowns(); toast('記録を保存しました！'); renderAdminRecs();
+  const recs = getRecs();
+  recs.push({ id: Date.now(), date: today(), reader: me, classroom: cls, book, note });
+  saveRecs(recs); toast('記録を保存しました');
+  document.getElementById('record-book').value = '';
+  document.getElementById('record-note').value = '';
+  renderMyRecs();
 }
 
+// ダミー関数や残りの必要最低限の定義
+function changeRecordMonth(dir) { rMonth.setMonth(rMonth.getMonth() + dir); renderMyRecs(); }
+function changeAdminMonth(dir) { aMonth.setMonth(aMonth.getMonth() + dir); renderAdminRecs(); }
 function renderMyRecs() {
-  document.getElementById('my-record-month').textContent=fmtM(rMonth);
-  const pfx=`${rMonth.getFullYear()}-${pad(rMonth.getMonth()+1)}`;
-  const recs=getRecs().filter(r=>r.reader===me&&r.date.startsWith(pfx));
-  const el=document.getElementById('my-records-list');
-  if(!recs.length){ el.innerHTML=emptyHtml('📖','この月の記録はありません'); return; }
-  el.innerHTML=recs.sort((a,b)=>b.date.localeCompare(a.date)).map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${fmtDS(r.date)}</span><span class="record-item-class">${r.classroom}</span></div><div class="record-item-book">📚 ${r.book}</div>${r.note?`<div class="record-item-note">💬 ${r.note}</div>`:''}<div class="record-actions"><button class="btn-edit" onclick="openUserEdit(${r.id})">編集</button></div></div>`).join('');
+  const el = document.getElementById('my-records-list'); if(!el) return;
+  const mStr = `${rMonth.getFullYear()}-${String(rMonth.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('my-record-month').textContent = fmtM(rMonth);
+  const items = getRecs().filter(r => r.reader === me && r.date.startsWith(mStr));
+  if(!items.length) { el.innerHTML = emptyHtml('📝', '今月の記録はありません'); return; }
+  el.innerHTML = items.map(r => `<div class="record-item"><div class="record-item-header"><span class="record-item-date">${r.date}</span><span class="record-item-class">${r.classroom}</span></div><div class="record-item-book">📖 ${r.book}</div>${r.note?`<div class="record-item-note">💡 ${r.note}</div>`:''}</div>`).join('');
 }
 function renderAdminRecs() {
-  document.getElementById('admin-manage-month').textContent=fmtM(aMonth);
-  const pfx=`${aMonth.getFullYear()}-${pad(aMonth.getMonth()+1)}`;
-  const recs=getRecs().filter(r=>r.date.startsWith(pfx));
-  const el=document.getElementById('admin-all-records-list');
-  if(!recs.length){ el.innerHTML=emptyHtml('📖','この月の記録はありません'); return; }
-  el.innerHTML=recs.sort((a,b)=>b.date.localeCompare(a.date)).map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${fmtDS(r.date)}</span><span class="record-item-class">${r.classroom}</span></div><div class="record-item-reader">👤 ${r.reader}</div><div class="record-item-book">📚 ${r.book}</div>${r.note?`<div class="record-item-note">💬 ${r.note}</div>`:''}<div class="record-actions"><button class="btn-edit" onclick="openEdit(${r.id})">編集</button><button class="btn-del" onclick="delRec(${r.id})">削除</button></div></div>`).join('');
+  const el = document.getElementById('admin-all-records-list'); if(!el) return;
+  const mStr = `${aMonth.getFullYear()}-${String(aMonth.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('admin-manage-month').textContent = fmtM(aMonth);
+  const items = getRecs().filter(r => r.date.startsWith(mStr));
+  if(!items.length) { el.innerHTML = emptyHtml('📝', '対象月の記録はありません'); return; }
+  el.innerHTML = items.map(r => `<div class="record-item"><div class="record-item-header"><span class="record-item-date">${r.date}</span><span class="record-item-class">${r.classroom}</span></div><div class="record-item-book">📖 ${r.book} (👤 ${r.reader})</div><div class="record-actions"><button class="btn-edit" onclick="openEdit(${r.id})">編集</button><button class="btn-del" onclick="deleteRec(${r.id})">削除</button></div></div>`).join('');
 }
-function changeRecordMonth(d) { rMonth.setMonth(rMonth.getMonth()+d); renderMyRecs(); }
-function changeAdminMonth(d) { aMonth.setMonth(aMonth.getMonth()+d); renderAdminRecs(); }
-
-function openEdit(id) {
-  const r=getRecs().find(x=>x.id===id); if(!r) return;
-  editId=id;
-  document.getElementById('edit-reader').value=r.reader;
-  document.getElementById('edit-book').value=r.book;
-  document.getElementById('edit-note').value=r.note||'';
-  fillSelect(['edit-class'],getCls()); document.getElementById('edit-class').value=r.classroom;
-  document.getElementById('modal-save-btn').setAttribute('onclick','saveEdit()');
-  document.getElementById('modal-edit').classList.add('active');
-}
-function saveEdit() {
-  let recs=getRecs(), i=recs.findIndex(r=>r.id===editId); if(i<0) return;
-  recs[i].reader=document.getElementById('edit-reader').value.trim();
-  recs[i].classroom=document.getElementById('edit-class').value;
-  recs[i].book=document.getElementById('edit-book').value.trim();
-  recs[i].note=document.getElementById('edit-note').value.trim();
-  saveRecs(recs); closeModal(); toast('記録を更新しました'); renderAdminRecs();
-}
-function delRec(id) {
-  if(!confirm('この記録を削除しますか？')) return;
-  saveRecs(getRecs().filter(r=>r.id!==id)); toast('削除しました'); renderAdminRecs();
-}
+function openEdit(id) { editId=id; const r=getRecs().find(x=>x.id===id); if(!r) return; document.getElementById('edit-reader').value=r.reader; document.getElementById('edit-class').value=r.classroom; document.getElementById('edit-book').value=r.book; document.getElementById('edit-note').value=r.note; document.getElementById('modal-edit').classList.add('active'); }
 function closeModal() { document.getElementById('modal-edit').classList.remove('active'); }
-function openUserEdit(id) {
-  const r=getRecs().find(x=>x.id===id); if(!r) return;
-  editId=id;
-  document.getElementById('edit-reader').value=r.reader;
-  document.getElementById('edit-book').value=r.book;
-  document.getElementById('edit-note').value=r.note||'';
-  fillSelect(['edit-class'],getCls()); document.getElementById('edit-class').value=r.classroom;
-  document.getElementById('modal-save-btn').setAttribute('onclick','saveUserEdit()');
-  document.getElementById('modal-edit').classList.add('active');
-}
-function saveUserEdit() {
-  let recs=getRecs(), i=recs.findIndex(r=>r.id===editId); if(i<0) return;
-  recs[i].classroom=document.getElementById('edit-class').value;
-  recs[i].book=document.getElementById('edit-book').value.trim();
-  recs[i].note=document.getElementById('edit-note').value.trim();
-  saveRecs(recs); closeModal(); toast('記録を更新しました'); renderMyRecs();
-}
-  
-// Calendar
-function buildCal(cid, dt, selDate) {
-  const wd=getWd(), y=dt.getFullYear(), m=dt.getMonth();
-  const todayDt=new Date(); todayDt.setHours(0,0,0,0);
-  const fd=new Date(y,m,1).getDay(), dim=new Date(y,m+1,0).getDate();
-  const dn=['日','月','火','水','木','金','土'];
-  const dc=['sun','','','','','','sat'];
-  let h=`<div class="cal-header"><button class="cal-nav" onclick="shiftCal('${cid}',-1)">←</button><div class="cal-title">${y}年${m+1}月</div><button class="cal-nav" onclick="shiftCal('${cid}',1)">→</button></div><div class="cal-grid">`;
-  dn.forEach((n,i)=>h+=`<div class="cal-dh ${dc[i]}">${n}</div>`);
-  for(let i=0;i<fd;i++) h+='<div class="cal-cell dim"></div>';
-  for(let d=1;d<=dim;d++) {
-    const dt2=new Date(y,m,d); dt2.setHours(0,0,0,0);
-    const ds=`${y}-${pad(m+1)}-${pad(d)}`, dow=dt2.getDay();
-const blocked=getBlockedDates().includes(ds);
-const pick=wd.includes(dow)&&dt2>=todayDt&&!blocked, sel=selDate===ds;
-    if(pick) h+=`<div class="cal-cell pick${sel?' sel':''}" onclick="selDate('${cid}','${ds}')"><span>${d}</span></div>`;
-    else h+=`<div class="cal-cell dim"><span style="opacity:.4">${d}</span></div>`;
-  }
-  h+='</div>';
-  document.getElementById(cid).innerHTML=h;
-}
-function renderMyCal() { buildCal('user-calendar', uCal, rDate); }
-function renderAdminCal() { buildCal('admin-calendar', aCal, arDate); }
-function shiftCal(id,d) { if(id==='user-calendar'){ uCal.setMonth(uCal.getMonth()+d); renderMyCal(); } else{ aCal.setMonth(aCal.getMonth()+d); renderAdminCal(); } }
-function selDate(cid,ds) {
-  if(cid==='user-calendar'){ rDate=ds; document.getElementById('reserve-selected-date').textContent=fmtDS(ds); renderMyCal(); checkReservationConflict(); }
-  else{ arDate=ds; document.getElementById('admin-reserve-date').textContent=fmtDS(ds); renderAdminCal(); }
-}
+function saveEdit() { const recs=getRecs(); const r=recs.find(x=>x.id===editId); if(!r) return; r.reader=document.getElementById('edit-reader').value; r.classroom=document.getElementById('edit-class').value; r.book=document.getElementById('edit-book').value; r.note=document.getElementById('edit-note').value; saveRecs(recs); closeModal(); renderAdminRecs(); toast('変更しました'); }
+function deleteRec(id) { if(!confirm('本当に削除しますか？')) return; saveRecs(getRecs().filter(x=>x.id!==id)); renderAdminRecs(); toast('削除しました'); }
 
-// Reservations
-function submitReservation() {
-  if(!rDate){ toast('日付を選んでください'); return; }
-  const cls=document.getElementById('reserve-class').value;
-  if(getRes().find(r=>r.date===rDate&&r.classroom===cls)){
-    toast('その日・教室はすでに予約が入っています'); return;
+// カレンダー生成ロジックの簡易版
+function buildCalHtml(date, clickFn, targetDateVar) {
+  const year = date.getFullYear(), month = date.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const lastDate = new Date(year, month + 1, 0).getDate();
+  const blocked = DB.get('blocked', []);
+  const activeWdays = getWd();
+  
+  let html = `<div class="cal-header"><button class="cal-nav" onclick="${clickFn}(-1)">←</button><div class="cal-title">${year}年 ${month+1}月</div><button class="cal-nav" onclick="${clickFn}(1)">→</button></div>`;
+  html += '<div class="cal-grid"><div class="cal-dh sun">日</div><div class="cal-dh">月</div><div class="cal-dh">火</div><div class="cal-dh">水</div><div class="cal-dh">木</div><div class="cal-dh">金</div><div class="cal-dh sat">土</div>';
+  
+  for(let i=0; i<firstDay; i++) html += '<div class="cal-cell dim"></div>';
+  for(let d=1; d<=lastDate; d++) {
+    const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const curDay = new Date(year, month, d).getDay();
+    const isSelectable = activeWdays.includes(curDay) && !blocked.includes(dStr);
+    const isSel = (targetDateVar === 'rDate' && rDate === dStr) || (targetDateVar === 'arDate' && arDate === dStr);
+    
+    if(isSelectable) {
+      html += `<div class="cal-cell pick ${isSel?'sel':''}" onclick="selectCalDate('${targetDateVar}', '${dStr}')"><span>${d}</span></div>`;
+    } else {
+      html += `<div class="cal-cell dim"><span>${d}</span></div>`;
+    }
   }
-  const res=getRes(); res.push({id:Date.now(),date:rDate,name:me,classroom:cls}); saveRes(res);
-  toast('予約しました！'); rDate=null;
-  document.getElementById('reserve-selected-date').textContent='カレンダーから日付を選んでください';
+  html += '</div>';
+  return html;
+}
+function selectCalDate(varName, dStr) { if(varName==='rDate'){ rDate=dStr; document.getElementById('reserve-selected-date').textContent=fmtDS(dStr); renderMyCal(); checkReservationConflict(); }else{ arDate=dStr; document.getElementById('admin-reserve-date').textContent=fmtDS(dStr); renderAdminCal(); } }
+function moveUserCal(dir) { uCal.setMonth(uCal.getMonth()+dir); renderMyCal(); }
+function moveAdminCal(dir) { aCal.setMonth(aCal.getMonth()+dir); renderAdminCal(); }
+function renderMyCal() { const el=document.getElementById('user-calendar'); if(el) el.innerHTML=buildCalHtml(uCal, 'moveUserCal', 'rDate'); }
+function renderAdminCal() { const el=document.getElementById('admin-calendar'); if(el) el.innerHTML=buildCalHtml(aCal, 'moveAdminCal', 'arDate'); }
+
+// 予約の送信
+function submitReservation() {
+  if(!rDate){ toast('日付を選択してください'); return; }
+  const cls=document.getElementById('reserve-class').value;
+  const res=getRes();
+  res.push({ id:Date.now(), date:rDate, name:me, classroom:cls });
+  saveRes(res); toast('予約しました');
   renderMyCal(); renderMyRes(); renderUserAllRes();
 }
+function adminSubmitReservation() {
+  if(!arDate){ toast('日付を選択してください'); return; }
+  const name=document.getElementById('admin-reserve-name').value.trim();
+  const cls=document.getElementById('admin-reserve-class').value;
+  if(!name){ toast('名前を入力してください'); return; }
+  const res=getRes();
+  res.push({ id:Date.now(), date:arDate, name, classroom:cls });
+  saveRes(res); toast('代理予約しました');
+  document.getElementById('admin-reserve-name').value='';
+  renderAdminCal(); renderAllRes();
+}
+function adminSubmitRecord() {
+  const name=document.getElementById('admin-record-name').value.trim();
+  const cls=document.getElementById('admin-record-class').value;
+  const book=document.getElementById('admin-record-book').value.trim();
+  const note=document.getElementById('admin-record-note').value.trim();
+  if(!name || !book){ toast('名前と本のタイトルを入力してください'); return; }
+  const recs=getRecs();
+  recs.push({ id:Date.now(), date:today(), reader:name, classroom:cls, book, note });
+  saveRecs(recs); toast('代理記録を保存しました');
+  document.getElementById('admin-record-name').value='';
+  document.getElementById('admin-record-book').value='';
+  document.getElementById('admin-record-note').value='';
+  renderAdminRecs(); fillNameDropdowns();
+}
+
 function renderMyRes() {
-  const td=today(), items=getRes().filter(r=>r.name===me&&r.date>=td).sort((a,b)=>a.date.localeCompare(b.date));
-  const el=document.getElementById('my-reservations-list');
-  if(!items.length){ el.innerHTML=emptyHtml('📅','予約はありません'); return; }
-  el.innerHTML=items.map(r=>`<div class="reservation-item"><div><div class="res-date">${fmtDS(r.date)}</div><div class="res-class">${r.classroom}</div></div><button class="btn-cancel" onclick="cancelRes(${r.id})">取消</button></div>`).join('');
+  const el=document.getElementById('my-reservations-list'); if(!el) return;
+  const items=getRes().filter(r=>r.name===me).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!items.length){ el.innerHTML=emptyHtml('📅','あなたの予約はありません'); return; }
+  el.innerHTML=items.map(r=>`<div class="reservation-item"><div class="res-info"><div class="res-date">${fmtDS(r.date)}</div><div class="res-class">${r.classroom}</div></div><button class="btn-cancel" onclick="cancelRes(${r.id})">取消</button></div>`).join('');
 }
 function renderAllRes() {
-  const td=today(), items=getRes().filter(r=>r.date>=td).sort((a,b)=>a.date.localeCompare(b.date));
-  const el=document.getElementById('all-reservations-list');
+  const el=document.getElementById('all-reservations-list'); if(!el) return;
+  const items=getRes().sort((a,b)=>a.date.localeCompare(b.date));
   if(!items.length){ el.innerHTML=emptyHtml('📅','予約はありません'); return; }
-  el.innerHTML=items.map(r=>`<div class="reservation-item" style="flex-direction:column;align-items:flex-start;gap:4px;"><div style="display:flex;justify-content:space-between;align-items:center;width:100%;"><div><div class="res-date">${fmtDS(r.date)}</div><div class="res-class">${r.classroom}</div><div class="res-who">👤 ${r.name}</div></div><button class="btn-cancel" onclick="adminCancelRes(${r.id})">取消</button></div></div>`).join('');
+  el.innerHTML=items.map(r=>`<div class="reservation-item"><div class="res-info"><div class="res-date">${fmtDS(r.date)}</div><div class="res-class">${r.classroom} (👤 ${r.name})</div></div><button class="btn-cancel" onclick="cancelRes(${r.id})">削除</button></div>`).join('');
 }
-function cancelRes(id){ if(!confirm('予約を取り消しますか？')) return; saveRes(getRes().filter(r=>r.id!==id)); toast('取り消しました'); renderMyRes(); }
-function adminCancelRes(id){ if(!confirm('この予約を取り消しますか？')) return; saveRes(getRes().filter(r=>r.id!==id)); toast('取り消しました'); renderAllRes(); }
 
-// Admin manage
-function renderCls() {
-  document.getElementById('classroom-tag-list').innerHTML=getCls().map(c=>`<div class="tag-chip">${c}<button onclick="removeCls('${c}')">×</button></div>`).join('');
-}
-function addClassroom() {
-  const v=document.getElementById('new-classroom').value.trim(); if(!v) return;
-  const cls=getCls(); if(cls.includes(v)){ toast('既に存在します'); return; }
-  cls.push(v); DB.set('cls',cls); document.getElementById('new-classroom').value='';
-  fillSelect(['admin-record-class','admin-reserve-class','edit-class','junior-class','record-class','reserve-class'],cls);
-  renderCls(); toast('追加しました');
-}
-function removeCls(name) {
-  if(!confirm(`「${name}」を削除しますか？`)) return;
-  const cls=getCls().filter(c=>c!==name); DB.set('cls',cls);
-  fillSelect(['admin-record-class','admin-reserve-class','edit-class','junior-class','record-class','reserve-class'],cls);
-  renderCls(); toast('削除しました');
-}
+// 管理画面系の各種描画
+function renderCls() { const el=document.getElementById('classroom-tag-list'); if(!el) return; el.innerHTML=getCls().map(c=>`<div class="tag-chip">${c}<button onclick="delClassroom('${c}')">×</button></div>`).join(''); }
+function addClassroom() { const inp=document.getElementById('new-classroom'); const v=inp.value.trim(); if(!v) return; const cls=getCls(); if(cls.includes(v)){toast('既に存在します'); return;} cls.push(v); DB.set('cls',cls); inp.value=''; renderCls(); initAdmin(); }
+function delClassroom(c) { if(!confirm(`${c} を削除しますか？`)) return; const cls=getCls().filter(x=>x!==c); DB.set('cls',cls); renderCls(); initAdmin(); }
+
 function renderWd() {
-  const dnames=['日曜日','月曜日','火曜日','水曜日','木曜日','金曜日','土曜日'];
-  const cur=getWd();
-  document.getElementById('weekday-selector').innerHTML=dnames.map((n,i)=>`<label class="wday-label${cur.includes(i)?' on':''}" id="wdl${i}"><input type="checkbox" value="${i}" ${cur.includes(i)?'checked':''} style="width:18px;height:18px;" onchange="toggleWd(${i},this)">${n}</label>`).join('');
+  const el=document.getElementById('weekday-selector'); if(!el) return;
+  const days=['日','月','火','水','木','金','土'], active=getWd();
+  el.innerHTML=days.map((d,i)=>`<div class="wday-label ${active.includes(i)?'on':''}" onclick="toggleWd(${i})">${d}曜日</div>`).join('');
 }
-function toggleWd(i,cb) { const l=document.getElementById('wdl'+i); if(cb.checked) l.classList.add('on'); else l.classList.remove('on'); }
-function saveWeekdays() {
-  const c=[...document.querySelectorAll('#weekday-selector input:checked')].map(x=>parseInt(x.value));
-  if(!c.length){ toast('1つ以上選択してください'); return; }
-  DB.set('wd',c); toast('曜日設定を保存しました'); renderMyCal(); renderAdminCal();
-}
-function addJunior() {
-  const name=document.getElementById('junior-name').value.trim(), cls=document.getElementById('junior-class').value;
-  if(!name){ toast('名前を入力してください'); return; }
-  const list=DB.get('juniors',[]); list.push({id:Date.now(),name,cls}); DB.set('juniors',list);
-  document.getElementById('junior-name').value=''; renderJuniors(); fillNameDropdowns(); toast('登録しました');
-}
-function renderJuniors() {
-  const list=DB.get('juniors',[]), el=document.getElementById('junior-list');
-  if(!list.length){ el.innerHTML='<p style="font-size:13px;color:var(--gray-400)">登録なし</p>'; return; }
-  el.innerHTML=list.map(j=>`
-    <div class="junior-item" id="jr-item-${j.id}">
-      <div><span style="font-weight:600">${j.name}</span><span class="jr-badge">Jr</span><span style="font-size:12px;color:var(--gray-600);margin-left:6px">${j.cls}</span></div>
-      <div style="display:flex;gap:6px;">
-        <button class="btn-edit" onclick="editJunior(${j.id})">編集</button>
-        <button class="btn-del btn-sm" onclick="removeJunior(${j.id})">削除</button>
-      </div>
-    </div>
-    <div id="jr-edit-${j.id}" style="display:none;background:var(--green-light);border-radius:9px;padding:12px;margin-bottom:6px;">
-      <div class="form-row" style="margin-bottom:8px;"><label>名前</label><input type="text" id="jr-name-${j.id}" value="${j.name}"></div>
-      <div class="form-row" style="margin-bottom:10px;"><label>クラス</label><select id="jr-cls-${j.id}">${getCls().map(c=>`<option value="${c}"${c===j.cls?' selected':''}>${c}</option>`).join('')}</select></div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-primary btn-sm" onclick="saveJuniorEdit(${j.id})">保存</button>
-        <button class="btn btn-outline btn-sm" onclick="cancelJuniorEdit(${j.id})">キャンセル</button>
-      </div>
-    </div>
-  `).join('');
-}
-function editJunior(id) {
-  document.getElementById('jr-item-'+id).style.display='none';
-  document.getElementById('jr-edit-'+id).style.display='block';
-}
-function cancelJuniorEdit(id) {
-  document.getElementById('jr-item-'+id).style.display='flex';
-  document.getElementById('jr-edit-'+id).style.display='none';
-}
-function saveJuniorEdit(id) {
-  const name=document.getElementById('jr-name-'+id).value.trim();
-  const cls=document.getElementById('jr-cls-'+id).value;
-  if(!name){ toast('名前を入力してください'); return; }
-  const list=DB.get('juniors',[]).map(j=>j.id===id?{...j,name,cls}:j);
-  DB.set('juniors',list); renderJuniors(); fillNameDropdowns(); toast('更新しました');
-}
-function removeJunior(id){ if(!confirm('削除しますか？')) return; DB.set('juniors',DB.get('juniors',[]).filter(j=>j.id!==id)); renderJuniors(); fillNameDropdowns(); toast('削除しました'); }
-function getBlockedDates() { return DB.get('blocked', []); }
-function addBlockedDate() {
-  const v=document.getElementById('blocked-date-input').value; if(!v){ toast('日付を選んでください'); return; }
-  const list=getBlockedDates(); if(list.includes(v)){ toast('既に登録されています'); return; }
-  list.push(v); DB.set('blocked',list);
-  document.getElementById('blocked-date-input').value='';
-  renderBlockedDates(); renderMyCal(); renderAdminCal(); toast('予約不可日を追加しました');
-}
-function renderBlockedDates() {
-  const list=getBlockedDates(), el=document.getElementById('blocked-dates-list');
-  if(!list.length){ el.innerHTML='<p style="font-size:13px;color:var(--gray-400)">登録なし</p>'; return; }
-  el.innerHTML=list.sort().map(d=>`<div class="tag-chip">${fmtDS(d)}<button onclick="removeBlockedDate('${d}')">×</button></div>`).join('');
-}
-function removeBlockedDate(d) {
-  DB.set('blocked',getBlockedDates().filter(x=>x!==d));
-  renderBlockedDates(); renderMyCal(); renderAdminCal(); toast('削除しました');
-}
-  function changePassword() {
-  const pw=document.getElementById('new-password').value;
-  if(!pw||pw.length<4){ toast('4文字以上で入力してください'); return; }
-  DB.set('pw',pw); document.getElementById('new-password').value=''; toast('パスワードを変更しました');
-}
-function exportCSV() {
-  const y=document.getElementById('export-year').value, m=document.getElementById('export-month').value;
-  const pfx=`${y}-${pad(m)}`, recs=getRecs().filter(r=>r.date.startsWith(pfx));
-  if(!recs.length){ toast('この月の記録はありません'); return; }
-  const header='日付,読んだ人,教室,本のタイトル,備考';
-  const rows=recs.sort((a,b)=>a.date.localeCompare(b.date)).map(r=>`${r.date},${r.reader},${r.classroom},"${r.book}","${r.note||''}"`);
-  const blob=new Blob(['\uFEFF'+[header,...rows].join('\n')],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`よみきかせ記録_${y}年${m}月.csv`; a.click();
-  toast('CSVをダウンロードしました');
-}
+function toggleWd(i) { let wd=getWd(); if(wd.includes(i)) wd=wd.filter(x=>x!==i); else wd.push(i); DB.set('wd',wd); renderWd(); renderAdminCal(); }
+function saveWeekdays() { toast('曜日設定を保存しました'); }
 
-function showQR() {
-  const url = location.href;
-  document.getElementById('qr-url-label').textContent = url;
-  const container = document.getElementById('qr-display');
-  container.innerHTML = '';
-  const script = document.createElement('script');
-  script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-  script.onload = () => {
-    new QRCode(container, { text: url, width: 200, height: 200, colorDark: '#1a4d30', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-  };
-  document.head.appendChild(script);
-  if(typeof QRCode !== 'undefined') {
-    new QRCode(container, { text: url, width: 200, height: 200, colorDark: '#1a4d30', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-  }
-  document.getElementById('modal-qr').classList.add('active');
-}
+function renderJuniors() { const el=document.getElementById('junior-list'); if(!el) return; el.innerHTML=DB.get('juniors',[]).map(j=>`<div class="junior-item"><span>${j.name} (${j.classroom})</span><button class="btn-del" style="padding:4px 8px;" onclick="delJunior('${j.name}')">削除</button></div>`).join(''); }
+function addJunior() { const name=document.getElementById('junior-name').value.trim(), cls=document.getElementById('junior-class').value; if(!name){toast('名前を入力してください');return;} const j=DB.get('juniors',[]); j.push({name,classroom:cls}); DB.set('juniors',j); document.getElementById('junior-name').value=''; renderJuniors(); fillNameDropdowns(); }
+function delJunior(n) { const j=DB.get('juniors',[]).filter(x=>x.name!==n); DB.set('juniors',j); renderJuniors(); fillNameDropdowns(); }
+
+function renderBlockedDates() { const el=document.getElementById('blocked-dates-list'); if(!el) return; el.innerHTML=DB.get('blocked',[]).map(d=>`<div class="junior-item"><span>${d}</span><button class="btn-del" style="padding:4px 8px;" onclick="delBlockedDate('${d}')">削除</button></div>`).join(''); }
+function addBlockedDate() { const inp=document.getElementById('blocked-date-input'); if(!inp.value) return; const b=DB.get('blocked',[]); if(!b.includes(inp.value))b.push(inp.value); DB.set('blocked',b); inp.value=''; renderBlockedDates(); renderAdminCal(); }
+function delBlockedDate(d) { const b=DB.get('blocked',[]).filter(x=>x!==d); DB.set('blocked',b); renderBlockedDates(); renderAdminCal(); }
+
+function changePassword() { const p=document.getElementById('new-password').value.trim(); if(!p){toast('パスワードを入力してください');return;} DB.set('pw',p); document.getElementById('new-password').value=''; toast('パスワードを変更しました'); }
+function showQR() { document.getElementById('qr-display').innerHTML='<div style="background:#ddd;width:150px;height:150px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#666;">QR Code Placeholder</div>'; document.getElementById('qr-url-label').textContent=window.location.href; document.getElementById('modal-qr').classList.add('active'); }
 function closeQR() { document.getElementById('modal-qr').classList.remove('active'); }
-const pad = n => String(n).padStart(2,'0');
-const today = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
-const fmtD = d => `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${'日月火水木金土'[d.getDay()]}）`;
-const fmtDS = s => { const [y,m,d]=s.split('-'); const dt=new Date(y,m-1,d); return `${y}年${parseInt(m)}月${parseInt(d)}日（${'日月火水木金土'[dt.getDay()]}）`; };
-const fmtM = d => `${d.getFullYear()}年${d.getMonth()+1}月`;
-const emptyHtml = (icon,msg) => `<div class="empty"><div class="empty-icon">${icon}</div><p>${msg}</p></div>`;
-function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+
+function exportCSV() {
+  const y=document.getElementById('export-year').value, m=String(document.getElementById('export-month').value).padStart(2,'0');
+  const items=getRecs().filter(r=>r.date.startsWith(`${y}-${m}`));
+  if(!items.length){ toast('対象データの記録がありません'); return; }
+  let csv='日付,教室,読んだ本,読んだ人,備考\n'+items.map(r=>`"${r.date}","${r.classroom}","${r.book}","${r.reader}","${r.note}"`).join('\n');
+  const bom=new Uint8Array([0xEF,0xBB,0xBF]), blob=new Blob([bom,csv],{type:'text/csv'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`よみきかせ記録_${y}年${m}月.csv`; a.click();
+}
 </script>
 </body>
 </html>
