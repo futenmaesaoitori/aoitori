@@ -411,30 +411,35 @@ async function syncFromGAS(showMsg = false) {
   setSyncBar(false);
 }
 
-/** GASへデータを送信（POST） */
+/** GASへデータを送信（GETパラメータ方式・CORS問題なし） */
 async function pushToGAS(type, data) {
   if (!GAS_URL) return;
+  // URLにJSONを乗せて送信（GETのみ使用することでCORSを回避）
+  const encoded = encodeURIComponent(JSON.stringify(data));
+  const url = `${GAS_URL}?type=${type}&data=${encoded}`;
+const resp = await fetch(url, { method: 'GET' });  // ← GETのみ
   try {
-    await fetch(GAS_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, data })
-    });
+    const resp = await fetch(url, { method: 'GET' });
+    const json = await resp.json();
+    if (json.ok) {
+      // 書き込み後のレスポンスに最新データが含まれるので直接反映
+      if (json.records)      DB.set('recs', json.records.map(normalizeRec));
+      if (json.reservations) DB.set('res',  json.reservations.map(normalizeRes));
+      refreshAllViews();
+    }
   } catch(err) {
     console.error('pushToGAS error:', err);
   }
 }
 
-/** 記録保存：ローカル更新 → GAS送信 → GAS再取得で全端末同期 */
+/** 記録保存：ローカル更新 → GAS送信（レスポンスで自動同期） */
 async function saveRecs(v) {
   DB.set('recs', v);
   await pushToGAS('records', v);
-  await syncFromGAS();
 }
 async function saveRes(v) {
   DB.set('res', v);
   await pushToGAS('reservations', v);
-  await syncFromGAS();
 }
 
 // idを数値統一（スプレッドシート経由で文字列化される場合の対策）
