@@ -417,7 +417,6 @@ async function pushToGAS(type, data) {
   // URLにJSONを乗せて送信（GETのみ使用することでCORSを回避）
   const encoded = encodeURIComponent(JSON.stringify(data));
   const url = `${GAS_URL}?type=${type}&data=${encoded}`;
-const resp = await fetch(url, { method: 'GET' });  // ← GETのみ
   try {
     const resp = await fetch(url, { method: 'GET' });
     const json = await resp.json();
