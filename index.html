@@ -404,16 +404,16 @@ async function syncFromGAS(showMsg = false) {
       if (showMsg) toast('データを最新に更新しました');
     } else {
       if (showMsg) toast('同期エラー: ' + (json.error || '不明'));
-      console.error('syncFromGAS GAS error:', json.error);
+      console.error('syncFromGAS error:', json.error);
     }
   } catch(err) {
     if (showMsg) toast('通信エラーが発生しました');
-    console.error('syncFromGAS error:', err);
+    console.error('syncFromGAS fetch error:', err);
   }
   setSyncBar(false);
 }
 
-/** GASへデータを送信（GETパラメータ方式・CORS問題なし） */
+/** GASへデータを送信後、レスポンスの最新データで即時反映 */
 async function pushToGAS(type, data) {
   if (!GAS_URL) return;
   const encoded = encodeURIComponent(JSON.stringify(data));
@@ -427,10 +427,13 @@ async function pushToGAS(type, data) {
       if (json.reservations) DB.set('res',  json.reservations.map(normalizeRes));
       refreshAllViews();
     } else {
-      console.error('pushToGAS GAS error:', json.error);
+      console.error('pushToGAS error:', json.error);
+      // GAS書き込みは成功している可能性があるので再取得を試みる
+      await syncFromGAS();
     }
   } catch(err) {
-    console.error('pushToGAS error:', err);
+    console.error('pushToGAS fetch error:', err);
+    await syncFromGAS();
   }
 }
 
@@ -746,9 +749,14 @@ function renderMyRecs() {
   const el=document.getElementById('my-records-list'); if(!el) return;
   const mStr=`${rMonth.getFullYear()}-${String(rMonth.getMonth()+1).padStart(2,'0')}`;
   document.getElementById('my-record-month').textContent=fmtM(rMonth);
-  const items=getRecs().filter(r=>r.reader===me&&r.date.startsWith(mStr));
+  // 自分の記録を表示（名前の大文字小文字・全半角を無視して照合）
+  const myName = (me||'').trim();
+  const items=getRecs().filter(r => {
+    if (!r.date.startsWith(mStr)) return false;
+    return r.reader && r.reader.trim() === myName;
+  });
   if(!items.length){ el.innerHTML=emptyHtml('📝','今月の記録はありません'); return; }
-  el.innerHTML=items.map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${r.date}</span><span class="record-item-class">${r.classroom}</span></div><div class="record-item-book">📖 ${r.book}</div>${r.note?`<div class="record-item-note">💡 ${r.note}</div>`:''}</div>`).join('');
+  el.innerHTML=items.map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${normDate(r.date)}</span><span class="record-item-class">${r.classroom}</span></div><div class="record-item-book">📖 ${r.book}</div>${r.note?`<div class="record-item-note">💡 ${r.note}</div>`:''}</div>`).join('');
 }
 
 function renderAdminRecs() {
