@@ -474,18 +474,26 @@ let rDate = null, arDate = null, editId = null;
 const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 const fmtD  = d => `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
 const fmtM  = d => `${d.getFullYear()}年${d.getMonth()+1}月`;
-// スプレッドシート経由で "2025/05/18" になる場合も対応
-const fmtDS = s => {
-  if (!s) return '日付不明';
-  const norm = String(s).replace(/\//g, '-').trim();
-  const p = norm.split('-');
-  if (p.length < 3) return s;
-  return `${parseInt(p[1])}月${parseInt(p[2])}日`;
-};
 // 日付の正規化（保存・比較用に "YYYY-MM-DD" に統一）
 const normDate = s => {
   if (!s) return '';
-  return String(s).replace(/\//g, '-').trim();
+  const str = String(s).trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 10);
+  if (/^\d{4}\/\d{2}\/\d{2}/.test(str)) return str.slice(0, 10).replace(/\//g, '-');
+  const d = new Date(str);
+  if (!isNaN(d)) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  return str;
+};
+const fmtDS = s => {
+  const n = normDate(s);
+  if (!n) return '日付不明';
+  const p = n.split('-');
+  return `${parseInt(p[1])}月${parseInt(p[2])}日`;
 };
 const emptyHtml = (icon,txt) => `<div class="empty"><div class="empty-icon">${icon}</div><p>${txt}</p></div>`;
 function toast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
