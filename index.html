@@ -73,12 +73,18 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 .cal-dh { text-align: center; padding: 10px 0 6px; font-size: 11px; color: var(--gray-400); font-weight: 600; }
 .cal-dh.sun { color: var(--red); }
 .cal-dh.sat { color: #3a7abf; }
-.cal-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 11px; max-height: 38px; }
-.cal-cell.sel span { background: var(--green) !important; color: white !important; border-color: var(--green) !important; }
+.cal-cell { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; max-height: 44px; position: relative; }
+.cal-cell.sel span.cal-num { background: var(--green) !important; color: white !important; border-color: var(--green) !important; }
 .cal-cell.pick { cursor: pointer; }
-.cal-cell.pick span { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--green-light); color: var(--green-dark); font-weight: 600; border: 1.5px solid var(--green-mid); }
-.cal-cell.pick:active span { background: var(--green); color: white; }
+.cal-cell.pick span.cal-num { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--green-light); color: var(--green-dark); font-weight: 600; border: 1.5px solid var(--green-mid); }
+.cal-cell.pick:active span.cal-num { background: var(--green); color: white; }
 .cal-cell.dim { opacity: .3; }
+/* 予約ドット */
+.cal-dots { display: flex; gap: 2px; justify-content: center; margin-top: 2px; flex-wrap: wrap; max-width: 34px; }
+.cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
+.cal-dot.full { background: var(--red); }
+/* 予約済みバッジ（全教室埋まり） */
+.cal-cell.booked span.cal-num { background: #fdf0f0 !important; color: var(--red) !important; border-color: var(--red) !important; }
 .reservation-item { background: var(--green-light); border-radius: 9px; padding: 12px 14px; border-left: 3px solid var(--green); display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .res-date { font-size: 13px; font-weight: 700; color: var(--green-dark); }
 .res-class { font-size: 12px; color: var(--green); margin-top: 2px; }
@@ -109,8 +115,17 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 .divider { height: 1px; background: var(--gray-200); margin: 16px 0; }
 .wday-label { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 9px; cursor: pointer; font-weight: 600; font-size: 14px; margin-bottom: 8px; border: 1.5px solid var(--gray-200); background: var(--gray-100); }
 .wday-label.on { background: var(--green-light); border-color: var(--green-mid); color: var(--green-dark); }
-.jr-badge { display: inline-block; background: var(--amber-light); color: #8a5500; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 10px; margin-left: 4px; border: 1px solid #e8c860; }
 .qr-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 13px; background: var(--green-light); color: var(--green-dark); border: 1.5px solid var(--green-mid); border-radius: 10px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; margin-top: 8px; }
+/* 同期中インジケーター */
+.sync-bar { background: var(--amber-light); color: #8a5500; font-size: 12px; text-align: center; padding: 6px; display: none; }
+.sync-bar.show { display: block; }
+/* 予約凡例 */
+.cal-legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11px; color: var(--gray-600); padding: 8px 12px; border-top: 1px solid var(--gray-200); }
+.cal-legend-item { display: flex; align-items: center; gap: 4px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+/* 予約状況バッジ */
+.booked-badge { display: inline-block; font-size: 10px; background: var(--red-light); color: var(--red); border-radius: 4px; padding: 1px 5px; margin-left: 4px; }
+.partial-badge { display: inline-block; font-size: 10px; background: var(--amber-light); color: #8a5500; border-radius: 4px; padding: 1px 5px; margin-left: 4px; }
 </style>
 </head>
 <body>
@@ -157,10 +172,14 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 
 <!-- USER APP -->
 <div class="screen" id="screen-user">
+  <div class="sync-bar" id="user-sync-bar">⏳ データを同期中...</div>
   <div class="app-header">
     <div class="app-header-top">
       <div class="app-title">📚 よみきかせ記録</div>
-      <div class="user-badge" id="user-badge-name"></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="syncFromGAS(true)" style="background:var(--green-light);border:none;border-radius:8px;padding:5px 10px;font-size:12px;color:var(--green-dark);cursor:pointer;">🔄</button>
+        <div class="user-badge" id="user-badge-name"></div>
+      </div>
     </div>
     <div class="tabs">
       <button class="tab active" onclick="switchTab('user','record')" id="user-tab-record">記録</button>
@@ -188,12 +207,18 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
       </div>
     </div>
     <div class="tab-panel" id="user-panel-reserve">
-      <div class="calendar" id="user-calendar"></div>
+      <div class="calendar" id="user-calendar">
+        <div class="cal-legend">
+          <div class="cal-legend-item"><div class="legend-dot" style="background:var(--amber)"></div>一部予約あり</div>
+          <div class="cal-legend-item"><div class="legend-dot" style="background:var(--red)"></div>全教室満席</div>
+        </div>
+      </div>
       <div class="card">
         <h3>教室を選択して予約</h3>
         <div class="form-row"><label>選択した日付</label><div class="date-display" id="reserve-selected-date">カレンダーから日付を選んでください</div></div>
-        <div class="form-row"><label>教室</label><select id="reserve-class"></select></div>
-        <button class="btn btn-primary" onclick="submitReservation()">予約する</button>
+        <div class="form-row"><label>教室</label><select id="reserve-class" onchange="checkReservationConflict()"></select></div>
+        <div id="reserve-status-msg" style="font-size:12px;margin-bottom:10px;color:var(--gray-600);"></div>
+        <button class="btn btn-primary" id="reserve-btn" onclick="submitReservation()">予約する</button>
       </div>
       <div class="card"><h3>自分の予約一覧</h3><div id="my-reservations-list"></div></div>
       <div class="card"><h3>全員の予約状況</h3><div id="user-all-reservations-list"></div></div>
@@ -204,10 +229,14 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 
 <!-- ADMIN APP -->
 <div class="screen" id="screen-admin">
+  <div class="sync-bar" id="admin-sync-bar">⏳ データを同期中...</div>
   <div class="app-header">
     <div class="app-header-top">
       <div class="app-title">📚 よみきかせ記録</div>
-      <div class="admin-badge">管理者</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="syncFromGAS(true)" style="background:var(--amber-light);border:none;border-radius:8px;padding:5px 10px;font-size:12px;color:#8a5500;cursor:pointer;">🔄 再読込</button>
+        <div class="admin-badge">管理者</div>
+      </div>
     </div>
     <div class="tabs">
       <button class="tab active" onclick="switchTab('admin','record')" id="admin-tab-record">記録</button>
@@ -238,7 +267,12 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
       </div>
     </div>
     <div class="tab-panel" id="admin-panel-reserve">
-      <div class="calendar" id="admin-calendar"></div>
+      <div class="calendar" id="admin-calendar">
+        <div class="cal-legend">
+          <div class="cal-legend-item"><div class="legend-dot" style="background:var(--amber)"></div>一部予約あり</div>
+          <div class="cal-legend-item"><div class="legend-dot" style="background:var(--red)"></div>全教室満席</div>
+        </div>
+      </div>
       <div class="card">
         <h3>予約入力（代理）</h3>
         <div class="form-row"><label>選択した日付</label><div class="date-display" id="admin-reserve-date">カレンダーから日付を選んでください</div></div>
@@ -338,70 +372,132 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 <div class="toast" id="toast"></div>
 
 <script>
+// ========================================================
+// 設定 ── GAS URL をここだけ変更すればOK
+// ========================================================
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbyaS3ssA2_GyVQSxz1aV0ybGPesc1gIL0Z7P9PrOr0JSXTEGBFlPM6dD5J43KT2FmRDXg/exec';
 
+// ========================================================
+// ローカルキャッシュ（端末内一時保存）
+// ========================================================
 const DB = {
   get: (k,d) => { try{ const v=localStorage.getItem('yk_'+k); return v?JSON.parse(v):d; }catch(e){ return d; } },
   set: (k,v) => localStorage.setItem('yk_'+k, JSON.stringify(v))
 };
 
-function syncGAS(type, data) {
-  if (!GAS_URL || GAS_URL.includes('ここに')) return;
+// ========================================================
+// GAS通信 ── 全データ共有の核心部分
+// ========================================================
 
-  // 現代的な通信方法（fetch API）を使って、データを安全にPOST送信します
-  fetch(GAS_URL, {
-    method: 'POST',
-    // 異なるドメイン（Google）への送信でエラーを起こさないための設定
-    mode: 'no-cors', 
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    // データを文字数の制限がない「ボディ」に入れて送信します
-    body: JSON.stringify({ type, data })
-  })
-  .then(() => {
-    console.log('GASへのデータ送信処理が実行されました（' + type + '）');
-  })
-  .catch(error => {
-    console.error('通信エラーが発生しました:', error);
+/** GASからデータを取得してlocalStorageに反映 */
+async function syncFromGAS(showMsg = false) {
+  if (!GAS_URL) return;
+  setSyncBar(true);
+  try {
+    const resp = await fetch(`${GAS_URL}?type=all`, { method: 'GET' });
+    const json = await resp.json();
+    if (json.ok) {
+      if (json.records)      DB.set('recs', json.records.map(normalizeRec));
+      if (json.reservations) DB.set('res',  json.reservations.map(normalizeRes));
+      refreshAllViews();
+      if (showMsg) toast('データを最新に更新しました');
+    } else {
+      if (showMsg) toast('同期エラー: ' + (json.error || '不明'));
+    }
+  } catch(err) {
+    if (showMsg) toast('通信エラーが発生しました');
+    console.error('syncFromGAS error:', err);
+  }
+  setSyncBar(false);
+}
+
+/** GASへデータを送信（POST） */
+async function pushToGAS(type, data) {
+  if (!GAS_URL) return;
+  try {
+    await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, data })
+    });
+  } catch(err) {
+    console.error('pushToGAS error:', err);
+  }
+}
+
+/** 記録保存：ローカル更新 → GAS送信 → GAS再取得で全端末同期 */
+async function saveRecs(v) {
+  DB.set('recs', v);
+  await pushToGAS('records', v);
+  await syncFromGAS();
+}
+async function saveRes(v) {
+  DB.set('res', v);
+  await pushToGAS('reservations', v);
+  await syncFromGAS();
+}
+
+// idを数値統一（スプレッドシート経由で文字列化される場合の対策）
+function normalizeRec(r) { return { ...r, id: Number(r.id) || r.id }; }
+function normalizeRes(r) { return { ...r, id: Number(r.id) || r.id }; }
+
+function setSyncBar(show) {
+  ['user-sync-bar','admin-sync-bar'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('show', show);
   });
 }
-  
+
+// ========================================================
+// データアクセサ
+// ========================================================
 const DEFAULT_CLS = ['1年1組','1年2組','1年3組','1年学年全体','2年1組','2年2組','2年3組','2年学年全体','3年1組','3年2組','3年3組','3年学年全体','4年1組','4年2組','4年3組','4年学年全体','5年1組','5年2組','5年3組','5年学年全体','6年1組','6年2組','6年3組','6年学年全体'];
 const DEFAULT_PW = '3359';
 const getCls = () => DB.get('cls', DEFAULT_CLS);
-const getWd = () => DB.get('wd', [4]);
-const getPw = () => DB.get('pw', DEFAULT_PW);
+const getWd  = () => DB.get('wd', [4]);
+const getPw  = () => DB.get('pw', DEFAULT_PW);
 const getRecs = () => DB.get('recs', []);
-const getRes = () => DB.get('res', []);
-const saveRecs = v => { DB.set('recs', v); syncGAS('records', v); };
-const saveRes = v => { DB.set('res', v); syncGAS('reservations', v); };
+const getRes  = () => DB.get('res', []);
 
 let me = null, isAdmin = false;
 let rMonth = new Date(), aMonth = new Date();
 let uCal = new Date(), aCal = new Date();
 let rDate = null, arDate = null, editId = null;
 
-// 便利関数
 const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
-const fmtD = d => `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
-const fmtM = d => `${d.getFullYear()}年${d.getMonth()+1}月`;
-const fmtDS = s => { const parts = s.split('-'); return `${parts[1]}月${parts[2]}日`; };
-const emptyHtml = (icon, txt) => `<div class="empty"><div class="empty-icon">${icon}</div><p>${txt}</p></div>`;
-function toast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2000); }
+const fmtD  = d => `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+const fmtM  = d => `${d.getFullYear()}年${d.getMonth()+1}月`;
+const fmtDS = s => { const p=s.split('-'); return `${p[1]}月${p[2]}日`; };
+const emptyHtml = (icon,txt) => `<div class="empty"><div class="empty-icon">${icon}</div><p>${txt}</p></div>`;
+function toast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
 
+// ========================================================
+// 初期化
+// ========================================================
 window.addEventListener('DOMContentLoaded', () => {
-  const su = DB.get('me', null), sa = DB.get('ia', false);
-  if (su && su !== 'admin') { document.getElementById('login-name').value = su; }
-  if (sa) { isAdmin=true; me='admin'; showScreen('screen-admin'); initAdmin(); }
-  else if (su) { me=su; showScreen('screen-user'); initUser(); }
+  const su = DB.get('me',null), sa = DB.get('ia',false);
+  if (su && su !== 'admin') document.getElementById('login-name').value = su;
   document.getElementById('record-date-display').textContent = fmtD(new Date());
   document.getElementById('admin-record-date-display').textContent = fmtD(new Date());
   const ey = document.getElementById('export-year');
   for(let y=new Date().getFullYear();y>=2020;y--) ey.innerHTML += `<option value="${y}">${y}年</option>`;
   document.getElementById('export-month').value = new Date().getMonth()+1;
+
+  if (sa) { isAdmin=true; me='admin'; showScreen('screen-admin'); initAdmin(); syncFromGAS(); }
+  else if (su) { me=su; showScreen('screen-user'); initUser(); syncFromGAS(); }
 });
 
+function refreshAllViews() {
+  if (isAdmin) {
+    renderAdminRecs(); renderAllRes(); renderAdminCal(); fillNameDropdowns();
+  } else if (me) {
+    renderMyRecs(); renderMyRes(); renderUserAllRes(); renderMyCal();
+  }
+}
+
+// ========================================================
+// 画面・タブ切り替え
+// ========================================================
 function showScreen(id) { document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0,0); }
 function switchTab(u,t) {
   document.querySelectorAll(`#screen-${u} .tab`).forEach(x=>x.classList.remove('active'));
@@ -410,22 +506,27 @@ function switchTab(u,t) {
   document.getElementById(`${u}-panel-${t}`).classList.add('active');
 }
 
+// ========================================================
 // 認証
+// ========================================================
 function loginUser() {
-  const n = document.getElementById('login-name').value.trim();
+  const n=document.getElementById('login-name').value.trim();
   if(!n){ toast('名前を入力してください'); return; }
   me=n; isAdmin=false; DB.set('me',n); DB.set('ia',false);
-  showScreen('screen-user'); initUser();
+  showScreen('screen-user'); initUser(); syncFromGAS();
 }
 function loginAdmin() {
   if(document.getElementById('admin-password').value !== getPw()){ toast('パスワードが違います'); return; }
   isAdmin=true; me='admin'; DB.set('ia',true); DB.set('me','admin');
   document.getElementById('admin-password').value='';
-  showScreen('screen-admin'); initAdmin();
+  showScreen('screen-admin'); initAdmin(); syncFromGAS();
 }
-function logoutUser() { DB.set('me',null); DB.set('ia',false); me=null; isAdmin=false; document.getElementById('login-name').value=''; showScreen('screen-login'); }
-function logoutAdmin() { logoutUser(); showScreen('screen-login'); }
+function logoutUser()  { DB.set('me',null); DB.set('ia',false); me=null; isAdmin=false; document.getElementById('login-name').value=''; showScreen('screen-login'); }
+function logoutAdmin() { logoutUser(); }
 
+// ========================================================
+// セレクト・ドロップダウン初期化
+// ========================================================
 function fillSelect(ids, items) { ids.forEach(id=>{ const el=document.getElementById(id); if(!el) return; el.innerHTML=items.map(c=>`<option value="${c}">${c}</option>`).join(''); }); }
 function fillNameDropdowns() {
   const recNames=[...new Set(getRecs().map(r=>r.reader))].filter(Boolean);
@@ -437,21 +538,218 @@ function fillNameDropdowns() {
   });
 }
 function initAdmin() {
-  const cls = getCls();
+  const cls=getCls();
   fillSelect(['admin-record-class','admin-reserve-class','edit-class','junior-class','record-class','reserve-class'], cls);
   fillNameDropdowns(); renderAdminCal(); renderAdminRecs(); renderAllRes();
   renderCls(); renderWd(); renderJuniors(); renderBlockedDates();
-  aMonth = new Date(); document.getElementById('admin-manage-month').textContent = fmtM(aMonth);
+  aMonth=new Date(); document.getElementById('admin-manage-month').textContent=fmtM(aMonth);
 }
 function initUser() {
-  document.getElementById('user-badge-name').textContent = me;
+  document.getElementById('user-badge-name').textContent=me;
   fillSelect(['record-class','reserve-class'], getCls());
-  rMonth = new Date();
+  rMonth=new Date();
   renderMyRecs(); renderMyCal(); renderMyRes(); renderUserAllRes();
 }
 
+// ========================================================
+// カレンダー生成（予約可視化つき）
+// ========================================================
+function buildCalHtml(date, clickFn, targetDateVar) {
+  const year=date.getFullYear(), month=date.getMonth();
+  const firstDay=new Date(year,month,1).getDay();
+  const lastDate=new Date(year,month+1,0).getDate();
+  const blocked=DB.get('blocked',[]);
+  const activeWdays=getWd();
+  const allCls=getCls();
+  const todayStr=today();
+
+  let html=`<div class="cal-header"><button class="cal-nav" onclick="${clickFn}(-1)">←</button><div class="cal-title">${year}年 ${month+1}月</div><button class="cal-nav" onclick="${clickFn}(1)">→</button></div>`;
+  html+='<div class="cal-grid"><div class="cal-dh sun">日</div><div class="cal-dh">月</div><div class="cal-dh">火</div><div class="cal-dh">水</div><div class="cal-dh">木</div><div class="cal-dh">金</div><div class="cal-dh sat">土</div>';
+
+  for(let i=0;i<firstDay;i++) html+='<div class="cal-cell dim"></div>';
+  for(let d=1;d<=lastDate;d++){
+    const dStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const curDay=new Date(year,month,d).getDay();
+    const isSelectable=activeWdays.includes(curDay) && !blocked.includes(dStr) && dStr>=todayStr;
+
+    // その日の予約済み教室を取得
+    const reservedCls=getRes().filter(r=>r.date===dStr).map(r=>r.classroom);
+    const reservedCount=reservedCls.length;
+    const fullyBooked=allCls.length>0 && reservedCount>=allCls.length;
+    const hasPartial=reservedCount>0 && !fullyBooked;
+
+    const isSel=(targetDateVar==='rDate'&&rDate===dStr)||(targetDateVar==='arDate'&&arDate===dStr);
+
+    // ドット生成（最大4個）
+    let dotsHtml='';
+    if(reservedCount>0){
+      const dotClass=fullyBooked?'cal-dot full':'cal-dot';
+      const dotCount=Math.min(reservedCount,4);
+      dotsHtml=`<div class="cal-dots">${Array(dotCount).fill(`<div class="${dotClass}"></div>`).join('')}</div>`;
+    }
+
+    if(isSelectable && !fullyBooked){
+      const bookedClass=hasPartial?'has-partial':'';
+      html+=`<div class="cal-cell pick ${isSel?'sel':''} ${bookedClass}" onclick="selectCalDate('${targetDateVar}','${dStr}')"><span class="cal-num">${d}</span>${dotsHtml}</div>`;
+    } else {
+      const dimClass=fullyBooked?'booked':'dim';
+      html+=`<div class="cal-cell ${dimClass}"><span class="cal-num">${d}</span>${dotsHtml}</div>`;
+    }
+  }
+  html+='</div>';
+  return html;
+}
+
+function selectCalDate(varName, dStr) {
+  if(varName==='rDate'){
+    rDate=dStr;
+    document.getElementById('reserve-selected-date').textContent=fmtDS(dStr);
+    renderMyCal();
+    renderReserveStatusForDate(dStr);
+    checkReservationConflict();
+  } else {
+    arDate=dStr;
+    document.getElementById('admin-reserve-date').textContent=fmtDS(dStr);
+    renderAdminCal();
+  }
+}
+
+/** 選択日の予約状況を教室選択欄の下に表示 */
+function renderReserveStatusForDate(dStr) {
+  const msg=document.getElementById('reserve-status-msg'); if(!msg) return;
+  const reserved=getRes().filter(r=>r.date===dStr);
+  if(!reserved.length){ msg.textContent=''; return; }
+  const lines=reserved.map(r=>`🔴 ${r.classroom}：${r.name}`).join('　');
+  msg.innerHTML=`<span style="color:var(--red);">この日の予約済み教室：</span>${lines}`;
+}
+
+function checkReservationConflict() {
+  const btn=document.getElementById('reserve-btn'); if(!btn) return;
+  if(!rDate){ btn.textContent='予約する'; btn.disabled=false; btn.style.opacity='1'; return; }
+  const cls=document.getElementById('reserve-class').value;
+  if(getRes().find(r=>r.date===rDate&&r.classroom===cls)){
+    btn.textContent='この教室はすでに予約済みです'; btn.disabled=true; btn.style.opacity='0.5';
+  } else {
+    btn.textContent='予約する'; btn.disabled=false; btn.style.opacity='1';
+  }
+}
+
+function moveUserCal(dir)  { uCal.setMonth(uCal.getMonth()+dir); renderMyCal(); }
+function moveAdminCal(dir) { aCal.setMonth(aCal.getMonth()+dir); renderAdminCal(); }
+function renderMyCal()    { const el=document.getElementById('user-calendar');  if(el){ const legend=el.querySelector('.cal-legend'); el.innerHTML=buildCalHtml(uCal,'moveUserCal','rDate'); if(legend) el.appendChild(legend); } }
+function renderAdminCal() { const el=document.getElementById('admin-calendar'); if(el){ const legend=el.querySelector('.cal-legend'); el.innerHTML=buildCalHtml(aCal,'moveAdminCal','arDate'); if(legend) el.appendChild(legend); } }
+
+// ========================================================
+// 予約
+// ========================================================
+async function submitReservation() {
+  if(!rDate){ toast('日付を選択してください'); return; }
+  const cls=document.getElementById('reserve-class').value;
+  // 送信前に最新データで再チェック
+  await syncFromGAS();
+  if(getRes().find(r=>r.date===rDate&&r.classroom===cls)){ toast('他の端末から予約が入りました。別の教室を選んでください'); checkReservationConflict(); return; }
+  const res=getRes();
+  res.push({ id:Date.now(), date:rDate, name:me, classroom:cls });
+  await saveRes(res);
+  toast('予約しました');
+  renderMyCal(); renderMyRes(); renderUserAllRes();
+}
+
+async function adminSubmitReservation() {
+  if(!arDate){ toast('日付を選択してください'); return; }
+  const name=document.getElementById('admin-reserve-name').value.trim();
+  const cls=document.getElementById('admin-reserve-class').value;
+  if(!name){ toast('名前を入力してください'); return; }
+  const res=getRes();
+  res.push({ id:Date.now(), date:arDate, name, classroom:cls });
+  await saveRes(res);
+  toast('代理予約しました');
+  document.getElementById('admin-reserve-name').value='';
+  renderAdminCal(); renderAllRes();
+}
+
+async function cancelRes(id) {
+  if(!confirm('予約を取り消しますか？')) return;
+  await saveRes(getRes().filter(r=>r.id!=id));
+  toast('取り消しました');
+  renderMyRes(); renderUserAllRes(); renderMyCal();
+  if(isAdmin){ renderAllRes(); renderAdminCal(); }
+}
+
+// ========================================================
+// 活動記録
+// ========================================================
+async function submitRecord() {
+  const book=document.getElementById('record-book').value.trim();
+  const cls=document.getElementById('record-class').value;
+  const note=document.getElementById('record-note').value.trim();
+  if(!book){ toast('本のタイトルを入力してください'); return; }
+  const recs=getRecs();
+  recs.push({ id:Date.now(), date:today(), reader:me, classroom:cls, book, note });
+  await saveRecs(recs);
+  toast('記録を保存しました');
+  document.getElementById('record-book').value='';
+  document.getElementById('record-note').value='';
+  renderMyRecs();
+}
+
+async function adminSubmitRecord() {
+  const name=document.getElementById('admin-record-name').value.trim();
+  const cls=document.getElementById('admin-record-class').value;
+  const book=document.getElementById('admin-record-book').value.trim();
+  const note=document.getElementById('admin-record-note').value.trim();
+  if(!name||!book){ toast('名前と本のタイトルを入力してください'); return; }
+  const recs=getRecs();
+  recs.push({ id:Date.now(), date:today(), reader:name, classroom:cls, book, note });
+  await saveRecs(recs);
+  toast('代理記録を保存しました');
+  document.getElementById('admin-record-name').value='';
+  document.getElementById('admin-record-book').value='';
+  document.getElementById('admin-record-note').value='';
+  renderAdminRecs(); fillNameDropdowns();
+}
+
+// ========================================================
+// 一覧描画
+// ========================================================
+function changeRecordMonth(dir) { rMonth.setMonth(rMonth.getMonth()+dir); renderMyRecs(); }
+function changeAdminMonth(dir)  { aMonth.setMonth(aMonth.getMonth()+dir); renderAdminRecs(); }
+
+function renderMyRecs() {
+  const el=document.getElementById('my-records-list'); if(!el) return;
+  const mStr=`${rMonth.getFullYear()}-${String(rMonth.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('my-record-month').textContent=fmtM(rMonth);
+  const items=getRecs().filter(r=>r.reader===me&&r.date.startsWith(mStr));
+  if(!items.length){ el.innerHTML=emptyHtml('📝','今月の記録はありません'); return; }
+  el.innerHTML=items.map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${r.date}</span><span class="record-item-class">${r.classroom}</span></div><div class="record-item-book">📖 ${r.book}</div>${r.note?`<div class="record-item-note">💡 ${r.note}</div>`:''}</div>`).join('');
+}
+
+function renderAdminRecs() {
+  const el=document.getElementById('admin-all-records-list'); if(!el) return;
+  const mStr=`${aMonth.getFullYear()}-${String(aMonth.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('admin-manage-month').textContent=fmtM(aMonth);
+  const items=getRecs().filter(r=>r.date.startsWith(mStr)).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!items.length){ el.innerHTML=emptyHtml('📝','対象月の記録はありません'); return; }
+  el.innerHTML=items.map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${r.date}</span><span class="record-item-class">${r.classroom}</span></div><div class="record-item-book">📖 ${r.book} <span style="font-weight:normal;font-size:12px;color:var(--gray-600);">（👤 ${r.reader}）</span></div><div class="record-actions"><button class="btn-edit" onclick="openEdit(${r.id})">編集</button><button class="btn-del" onclick="deleteRec(${r.id})">削除</button></div></div>`).join('');
+}
+
+function renderMyRes() {
+  const el=document.getElementById('my-reservations-list'); if(!el) return;
+  const items=getRes().filter(r=>r.name===me).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!items.length){ el.innerHTML=emptyHtml('📅','あなたの予約はありません'); return; }
+  el.innerHTML=items.map(r=>`<div class="reservation-item"><div><div class="res-date">${fmtDS(r.date)}</div><div class="res-class">${r.classroom}</div></div><button class="btn-cancel" onclick="cancelRes(${r.id})">取消</button></div>`).join('');
+}
+
+function renderAllRes() {
+  const el=document.getElementById('all-reservations-list'); if(!el) return;
+  const items=getRes().sort((a,b)=>a.date.localeCompare(b.date));
+  if(!items.length){ el.innerHTML=emptyHtml('📅','予約はありません'); return; }
+  el.innerHTML=items.map(r=>`<div class="reservation-item"><div><div class="res-date">${fmtDS(r.date)}</div><div class="res-class">${r.classroom} <span style="color:var(--gray-600);">👤 ${r.name}</span></div></div><button class="btn-cancel" onclick="cancelRes(${r.id})">削除</button></div>`).join('');
+}
+
 function renderUserAllRes() {
-  const td=today(), items=getRes().filter(r=>r.date>=td).sort((a,b)=>a.date.localeCompare(b.date));
+  const td=today();
+  const items=getRes().filter(r=>r.date>=td).sort((a,b)=>a.date.localeCompare(b.date));
   const el=document.getElementById('user-all-reservations-list'); if(!el) return;
   if(!items.length){ el.innerHTML=emptyHtml('📅','予約はありません'); return; }
   el.innerHTML=items.map(r=>`
@@ -467,145 +765,35 @@ function renderUserAllRes() {
     </div>`).join('');
 }
 
-function checkReservationConflict() {
-  const btn=document.querySelector('#user-panel-reserve .btn-primary');
-  if(!btn) return;
-  if(!rDate){ btn.textContent='予約する'; btn.disabled=false; btn.style.opacity='1'; return; }
-  const cls=document.getElementById('reserve-class').value;
-  if(getRes().find(r=>r.date===rDate&&r.classroom===cls)){
-    btn.textContent='この教室はすでに予約済みです'; btn.disabled=true; btn.style.opacity='0.5';
-  } else {
-    btn.textContent='予約する'; btn.disabled=false; btn.style.opacity='1';
-  }
+// ========================================================
+// 編集モーダル
+// ========================================================
+function openEdit(id) {
+  editId=id;
+  const r=getRecs().find(x=>x.id==id); if(!r) return;
+  document.getElementById('edit-reader').value=r.reader;
+  document.getElementById('edit-class').value=r.classroom;
+  document.getElementById('edit-book').value=r.book;
+  document.getElementById('edit-note').value=r.note;
+  document.getElementById('modal-edit').classList.add('active');
 }
-function cancelRes(id){ if(!confirm('予約を取り消しますか？')) return; 
-  saveRes(getRes().filter(r=>r.id!==id)); toast('取り消しました'); renderMyRes(); renderUserAllRes(); if(isAdmin){renderAllRes();renderAdminCal();}else{renderMyCal();} }
-
-// 活動記録の保存
-function submitRecord() {
-  const book=document.getElementById('record-book').value.trim();
-  const cls=document.getElementById('record-class').value;
-  const note=document.getElementById('record-note').value.trim();
-  if(!book){ toast('本のタイトルを入力してください'); return; }
-  const recs = getRecs();
-  recs.push({ id: Date.now(), date: today(), reader: me, classroom: cls, book, note });
-  saveRecs(recs); toast('記録を保存しました');
-  document.getElementById('record-book').value = '';
-  document.getElementById('record-note').value = '';
-  renderMyRecs();
-}
-
-// ダミー関数や残りの必要最低限の定義
-function changeRecordMonth(dir) { rMonth.setMonth(rMonth.getMonth() + dir); renderMyRecs(); }
-function changeAdminMonth(dir) { aMonth.setMonth(aMonth.getMonth() + dir); renderAdminRecs(); }
-function renderMyRecs() {
-  const el = document.getElementById('my-records-list'); if(!el) return;
-  const mStr = `${rMonth.getFullYear()}-${String(rMonth.getMonth()+1).padStart(2,'0')}`;
-  document.getElementById('my-record-month').textContent = fmtM(rMonth);
-  const items = getRecs().filter(r => r.reader === me && r.date.startsWith(mStr));
-  if(!items.length) { el.innerHTML = emptyHtml('📝', '今月の記録はありません'); return; }
-  el.innerHTML = items.map(r => `<div class="record-item"><div class="record-item-header"><span class="record-item-date">${r.date}</span><span class="record-item-class">${r.classroom}</span></div><div class="record-item-book">📖 ${r.book}</div>${r.note?`<div class="record-item-note">💡 ${r.note}</div>`:''}</div>`).join('');
-}
-function renderAdminRecs() {
-  const el = document.getElementById('admin-all-records-list'); if(!el) return;
-  const mStr = `${aMonth.getFullYear()}-${String(aMonth.getMonth()+1).padStart(2,'0')}`;
-  document.getElementById('admin-manage-month').textContent = fmtM(aMonth);
-  const items = getRecs().filter(r => r.date.startsWith(mStr));
-  if(!items.length) { el.innerHTML = emptyHtml('📝', '対象月の記録はありません'); return; }
-  el.innerHTML = items.map(r => `<div class="record-item"><div class="record-item-header"><span class="record-item-date">${r.date}</span><span class="record-item-class">${r.classroom}</span></div><div class="record-item-book">📖 ${r.book} (👤 ${r.reader})</div><div class="record-actions"><button class="btn-edit" onclick="openEdit(${r.id})">編集</button><button class="btn-del" onclick="deleteRec(${r.id})">削除</button></div></div>`).join('');
-}
-function openEdit(id) { editId=id; const r=getRecs().find(x=>x.id===id); if(!r) return; document.getElementById('edit-reader').value=r.reader; document.getElementById('edit-class').value=r.classroom; document.getElementById('edit-book').value=r.book; document.getElementById('edit-note').value=r.note; document.getElementById('modal-edit').classList.add('active'); }
 function closeModal() { document.getElementById('modal-edit').classList.remove('active'); }
-function saveEdit() { const recs=getRecs(); const r=recs.find(x=>x.id===editId); if(!r) return; r.reader=document.getElementById('edit-reader').value; r.classroom=document.getElementById('edit-class').value; r.book=document.getElementById('edit-book').value; r.note=document.getElementById('edit-note').value; saveRecs(recs); closeModal(); renderAdminRecs(); toast('変更しました'); }
-function deleteRec(id) { if(!confirm('本当に削除しますか？')) return; saveRecs(getRecs().filter(x=>x.id!==id)); renderAdminRecs(); toast('削除しました'); }
-
-// カレンダー生成ロジックの簡易版
-function buildCalHtml(date, clickFn, targetDateVar) {
-  const year = date.getFullYear(), month = date.getMonth();
-  const firstDay = new Date(year, month, 1).getDay();
-  const lastDate = new Date(year, month + 1, 0).getDate();
-  const blocked = DB.get('blocked', []);
-  const activeWdays = getWd();
-  
-  let html = `<div class="cal-header"><button class="cal-nav" onclick="${clickFn}(-1)">←</button><div class="cal-title">${year}年 ${month+1}月</div><button class="cal-nav" onclick="${clickFn}(1)">→</button></div>`;
-  html += '<div class="cal-grid"><div class="cal-dh sun">日</div><div class="cal-dh">月</div><div class="cal-dh">火</div><div class="cal-dh">水</div><div class="cal-dh">木</div><div class="cal-dh">金</div><div class="cal-dh sat">土</div>';
-  
-  for(let i=0; i<firstDay; i++) html += '<div class="cal-cell dim"></div>';
-  for(let d=1; d<=lastDate; d++) {
-    const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const curDay = new Date(year, month, d).getDay();
-    const todayStr = today();
-const isSelectable = activeWdays.includes(curDay) && !blocked.includes(dStr) && dStr >= todayStr;
-    const isSel = (targetDateVar === 'rDate' && rDate === dStr) || (targetDateVar === 'arDate' && arDate === dStr);
-    
-   const reservedClasses = getRes().filter(r=>r.date===dStr).map(r=>r.classroom);
-const allCls = getCls();
-const fullyBooked = allCls.length > 0 && reservedClasses.length >= allCls.length;
-if(isSelectable && !fullyBooked) {
-  html += `<div class="cal-cell pick ${isSel?'sel':''}" onclick="selectCalDate('${targetDateVar}', '${dStr}')"><span>${d}</span></div>`;
-} else {
-  html += `<div class="cal-cell dim"><span>${d}</span></div>`;
+async function saveEdit() {
+  const recs=getRecs(); const r=recs.find(x=>x.id==editId); if(!r) return;
+  r.reader=document.getElementById('edit-reader').value;
+  r.classroom=document.getElementById('edit-class').value;
+  r.book=document.getElementById('edit-book').value;
+  r.note=document.getElementById('edit-note').value;
+  await saveRecs(recs); closeModal(); renderAdminRecs(); toast('変更しました');
 }
-    
-  }
-  html += '</div>';
-  return html;
-}
-function selectCalDate(varName, dStr) { if(varName==='rDate'){ rDate=dStr; document.getElementById('reserve-selected-date').textContent=fmtDS(dStr); renderMyCal(); checkReservationConflict(); }else{ arDate=dStr; document.getElementById('admin-reserve-date').textContent=fmtDS(dStr); renderAdminCal(); } }
-function moveUserCal(dir) { uCal.setMonth(uCal.getMonth()+dir); renderMyCal(); }
-function moveAdminCal(dir) { aCal.setMonth(aCal.getMonth()+dir); renderAdminCal(); }
-function renderMyCal() { const el=document.getElementById('user-calendar'); if(el) el.innerHTML=buildCalHtml(uCal, 'moveUserCal', 'rDate'); }
-function renderAdminCal() { const el=document.getElementById('admin-calendar'); if(el) el.innerHTML=buildCalHtml(aCal, 'moveAdminCal', 'arDate'); }
-
-// 予約の送信
-function submitReservation() {
-  if(!rDate){ toast('日付を選択してください'); return; }
-  const cls=document.getElementById('reserve-class').value;
-  const res=getRes();
-  res.push({ id:Date.now(), date:rDate, name:me, classroom:cls });
-  saveRes(res); toast('予約しました');
-  renderMyCal(); renderMyRes(); renderUserAllRes();
-}
-function adminSubmitReservation() {
-  if(!arDate){ toast('日付を選択してください'); return; }
-  const name=document.getElementById('admin-reserve-name').value.trim();
-  const cls=document.getElementById('admin-reserve-class').value;
-  if(!name){ toast('名前を入力してください'); return; }
-  const res=getRes();
-  res.push({ id:Date.now(), date:arDate, name, classroom:cls });
-  saveRes(res); toast('代理予約しました');
-  document.getElementById('admin-reserve-name').value='';
-  renderAdminCal(); renderAllRes();
-}
-function adminSubmitRecord() {
-  const name=document.getElementById('admin-record-name').value.trim();
-  const cls=document.getElementById('admin-record-class').value;
-  const book=document.getElementById('admin-record-book').value.trim();
-  const note=document.getElementById('admin-record-note').value.trim();
-  if(!name || !book){ toast('名前と本のタイトルを入力してください'); return; }
-  const recs=getRecs();
-  recs.push({ id:Date.now(), date:today(), reader:name, classroom:cls, book, note });
-  saveRecs(recs); toast('代理記録を保存しました');
-  document.getElementById('admin-record-name').value='';
-  document.getElementById('admin-record-book').value='';
-  document.getElementById('admin-record-note').value='';
-  renderAdminRecs(); fillNameDropdowns();
+async function deleteRec(id) {
+  if(!confirm('本当に削除しますか？')) return;
+  await saveRecs(getRecs().filter(x=>x.id!=id)); renderAdminRecs(); toast('削除しました');
 }
 
-function renderMyRes() {
-  const el=document.getElementById('my-reservations-list'); if(!el) return;
-  const items=getRes().filter(r=>r.name===me).sort((a,b)=>a.date.localeCompare(b.date));
-  if(!items.length){ el.innerHTML=emptyHtml('📅','あなたの予約はありません'); return; }
-  el.innerHTML=items.map(r=>`<div class="reservation-item"><div class="res-info"><div class="res-date">${fmtDS(r.date)}</div><div class="res-class">${r.classroom}</div></div><button class="btn-cancel" onclick="cancelRes(${r.id})">取消</button></div>`).join('');
-}
-function renderAllRes() {
-  const el=document.getElementById('all-reservations-list'); if(!el) return;
-  const items=getRes().sort((a,b)=>a.date.localeCompare(b.date));
-  if(!items.length){ el.innerHTML=emptyHtml('📅','予約はありません'); return; }
-  el.innerHTML=items.map(r=>`<div class="reservation-item"><div class="res-info"><div class="res-date">${fmtDS(r.date)}</div><div class="res-class">${r.classroom} (👤 ${r.name})</div></div><button class="btn-cancel" onclick="cancelRes(${r.id})">削除</button></div>`).join('');
-}
-
-// 管理画面系の各種描画
+// ========================================================
+// 管理画面各種
+// ========================================================
 function renderCls() { const el=document.getElementById('classroom-tag-list'); if(!el) return; el.innerHTML=getCls().map(c=>`<div class="tag-chip">${c}<button onclick="delClassroom('${c}')">×</button></div>`).join(''); }
 function addClassroom() { const inp=document.getElementById('new-classroom'); const v=inp.value.trim(); if(!v) return; const cls=getCls(); if(cls.includes(v)){toast('既に存在します'); return;} cls.push(v); DB.set('cls',cls); inp.value=''; renderCls(); initAdmin(); }
 function delClassroom(c) { if(!confirm(`${c} を削除しますか？`)) return; const cls=getCls().filter(x=>x!==c); DB.set('cls',cls); renderCls(); initAdmin(); }
@@ -627,20 +815,16 @@ function addBlockedDate() { const inp=document.getElementById('blocked-date-inpu
 function delBlockedDate(d) { const b=DB.get('blocked',[]).filter(x=>x!==d); DB.set('blocked',b); renderBlockedDates(); renderAdminCal(); }
 
 function changePassword() { const p=document.getElementById('new-password').value.trim(); if(!p){toast('パスワードを入力してください');return;} DB.set('pw',p); document.getElementById('new-password').value=''; toast('パスワードを変更しました'); }
+
 function showQR() {
-  const url = window.location.href;
-  document.getElementById('qr-url-label').textContent = url;
-  const container = document.getElementById('qr-display');
-  container.innerHTML = '';
-  const s = document.createElement('script');
-  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-  s.onload = () => {
-    new QRCode(container, { text: url, width: 180, height: 180, colorDark: '#1a4d30', colorLight: '#ffffff' });
-  };
+  const url=window.location.href;
+  document.getElementById('qr-url-label').textContent=url;
+  const container=document.getElementById('qr-display'); container.innerHTML='';
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+  s.onload=()=>{ new QRCode(container,{text:url,width:180,height:180,colorDark:'#1a4d30',colorLight:'#ffffff'}); };
   document.head.appendChild(s);
-  if(typeof QRCode !== 'undefined') {
-    new QRCode(container, { text: url, width: 180, height: 180, colorDark: '#1a4d30', colorLight: '#ffffff' });
-  }
+  if(typeof QRCode!=='undefined') new QRCode(container,{text:url,width:180,height:180,colorDark:'#1a4d30',colorLight:'#ffffff'});
   document.getElementById('modal-qr').classList.add('active');
 }
 function closeQR() { document.getElementById('modal-qr').classList.remove('active'); }
