@@ -394,8 +394,9 @@ async function syncFromGAS(showMsg = false) {
   if (!GAS_URL) return;
   setSyncBar(true);
   try {
-    const resp = await fetch(`${GAS_URL}?type=all`, { method: 'GET' });
-    const json = await resp.json();
+    const resp = await fetch(`${GAS_URL}?type=all`, { method: 'GET', redirect: 'follow' });
+    const text = await resp.text();
+    const json = JSON.parse(text);
     if (json.ok) {
       if (json.records)      DB.set('recs', json.records.map(normalizeRec));
       if (json.reservations) DB.set('res',  json.reservations.map(normalizeRes));
@@ -403,6 +404,7 @@ async function syncFromGAS(showMsg = false) {
       if (showMsg) toast('データを最新に更新しました');
     } else {
       if (showMsg) toast('同期エラー: ' + (json.error || '不明'));
+      console.error('syncFromGAS GAS error:', json.error);
     }
   } catch(err) {
     if (showMsg) toast('通信エラーが発生しました');
@@ -414,17 +416,18 @@ async function syncFromGAS(showMsg = false) {
 /** GASへデータを送信（GETパラメータ方式・CORS問題なし） */
 async function pushToGAS(type, data) {
   if (!GAS_URL) return;
-  // URLにJSONを乗せて送信（GETのみ使用することでCORSを回避）
   const encoded = encodeURIComponent(JSON.stringify(data));
   const url = `${GAS_URL}?type=${type}&data=${encoded}`;
   try {
-    const resp = await fetch(url, { method: 'GET' });
-    const json = await resp.json();
+    const resp = await fetch(url, { method: 'GET', redirect: 'follow' });
+    const text = await resp.text();
+    const json = JSON.parse(text);
     if (json.ok) {
-      // 書き込み後のレスポンスに最新データが含まれるので直接反映
       if (json.records)      DB.set('recs', json.records.map(normalizeRec));
       if (json.reservations) DB.set('res',  json.reservations.map(normalizeRes));
       refreshAllViews();
+    } else {
+      console.error('pushToGAS GAS error:', json.error);
     }
   } catch(err) {
     console.error('pushToGAS error:', err);
@@ -441,9 +444,9 @@ async function saveRes(v) {
   await pushToGAS('reservations', v);
 }
 
-// idを数値統一（スプレッドシート経由で文字列化される場合の対策）
-function normalizeRec(r) { return { ...r, id: Number(r.id) || r.id }; }
-function normalizeRes(r) { return { ...r, id: Number(r.id) || r.id }; }
+// idを数値統一、日付をハイフン統一
+function normalizeRec(r) { return { ...r, id: Number(r.id) || r.id, date: normDate(r.date) }; }
+function normalizeRes(r) { return { ...r, id: Number(r.id) || r.id, date: normDate(r.date) }; }
 
 function setSyncBar(show) {
   ['user-sync-bar','admin-sync-bar'].forEach(id => {
@@ -471,7 +474,19 @@ let rDate = null, arDate = null, editId = null;
 const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 const fmtD  = d => `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
 const fmtM  = d => `${d.getFullYear()}年${d.getMonth()+1}月`;
-const fmtDS = s => { const p=s.split('-'); return `${p[1]}月${p[2]}日`; };
+// スプレッドシート経由で "2025/05/18" になる場合も対応
+const fmtDS = s => {
+  if (!s) return '日付不明';
+  const norm = String(s).replace(/\//g, '-').trim();
+  const p = norm.split('-');
+  if (p.length < 3) return s;
+  return `${parseInt(p[1])}月${parseInt(p[2])}日`;
+};
+// 日付の正規化（保存・比較用に "YYYY-MM-DD" に統一）
+const normDate = s => {
+  if (!s) return '';
+  return String(s).replace(/\//g, '-').trim();
+};
 const emptyHtml = (icon,txt) => `<div class="empty"><div class="empty-icon">${icon}</div><p>${txt}</p></div>`;
 function toast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
 
