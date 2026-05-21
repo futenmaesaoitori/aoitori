@@ -55,6 +55,8 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 .form-row input:focus,.form-row select:focus,.form-row textarea:focus { border-color: var(--green); }
 .form-row textarea { resize: none; height: 72px; }
 .form-row select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a6b5a' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; padding-right: 36px; }
+/* date input のネイティブUIを他のinputと揃える */
+.form-row input[type="date"] { -webkit-appearance: none; appearance: none; }
 .date-display { padding: 11px 13px; background: var(--gray-50); border: 1.5px solid var(--gray-200); border-radius: 9px; font-size: 15px; color: var(--gray-600); }
 .record-item { background: var(--gray-50); border-radius: 9px; padding: 12px 14px; border-left: 3px solid var(--green-mid); margin-bottom: 8px; }
 .record-item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
@@ -79,11 +81,9 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 .cal-cell.pick span.cal-num { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--green-light); color: var(--green-dark); font-weight: 600; border: 1.5px solid var(--green-mid); }
 .cal-cell.pick:active span.cal-num { background: var(--green); color: white; }
 .cal-cell.dim { opacity: .3; }
-/* 予約ドット */
 .cal-dots { display: flex; gap: 2px; justify-content: center; margin-top: 2px; flex-wrap: wrap; max-width: 34px; }
 .cal-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
 .cal-dot.full { background: var(--red); }
-/* 予約済みバッジ（全教室埋まり） */
 .cal-cell.booked span.cal-num { background: #fdf0f0 !important; color: var(--red) !important; border-color: var(--red) !important; }
 .reservation-item { background: var(--green-light); border-radius: 9px; padding: 12px 14px; border-left: 3px solid var(--green); display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .res-date { font-size: 13px; font-weight: 700; color: var(--green-dark); }
@@ -116,14 +116,11 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 .wday-label { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-radius: 9px; cursor: pointer; font-weight: 600; font-size: 14px; margin-bottom: 8px; border: 1.5px solid var(--gray-200); background: var(--gray-100); }
 .wday-label.on { background: var(--green-light); border-color: var(--green-mid); color: var(--green-dark); }
 .qr-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 13px; background: var(--green-light); color: var(--green-dark); border: 1.5px solid var(--green-mid); border-radius: 10px; font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer; margin-top: 8px; }
-/* 同期中インジケーター */
 .sync-bar { background: var(--amber-light); color: #8a5500; font-size: 12px; text-align: center; padding: 6px; display: none; }
 .sync-bar.show { display: block; }
-/* 予約凡例 */
 .cal-legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11px; color: var(--gray-600); padding: 8px 12px; border-top: 1px solid var(--gray-200); }
 .cal-legend-item { display: flex; align-items: center; gap: 4px; }
 .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-/* 予約状況バッジ */
 .booked-badge { display: inline-block; font-size: 10px; background: var(--red-light); color: var(--red); border-radius: 4px; padding: 1px 5px; margin-left: 4px; }
 .partial-badge { display: inline-block; font-size: 10px; background: var(--amber-light); color: #8a5500; border-radius: 4px; padding: 1px 5px; margin-left: 4px; }
 </style>
@@ -190,6 +187,7 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
     <div class="tab-panel active" id="user-panel-record">
       <div class="card">
         <h3>活動記録を入力</h3>
+        <!-- 一般ユーザーの記録入力：日付は自動（当日）のため表示のみ -->
         <div class="form-row"><label>日付</label><div class="date-display" id="record-date-display"></div></div>
         <div class="form-row"><label>教室</label><select id="record-class"></select></div>
         <div class="form-row"><label>読んだ本のタイトル</label><input type="text" id="record-book" placeholder="本のタイトルを入力"></div>
@@ -248,7 +246,11 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
     <div class="tab-panel active" id="admin-panel-record">
       <div class="card">
         <h3>活動記録を入力（代理）</h3>
-        <div class="form-row"><label>日付</label><div class="date-display" id="admin-record-date-display"></div></div>
+        <!-- ★変更：管理者の代理記録には日付入力欄を追加（デフォルト当日） -->
+        <div class="form-row">
+          <label>日付</label>
+          <input type="date" id="admin-record-date">
+        </div>
         <div class="form-row"><label>読んだ人（名前入力）</label><input type="text" id="admin-record-name" placeholder="名前を入力"></div>
         <div class="form-row"><label>または過去の名前から選択</label><select id="admin-record-name-select" onchange="document.getElementById('admin-record-name').value=this.value"><option value="">— 選択 —</option></select></div>
         <div class="form-row"><label>教室</label><select id="admin-record-class"></select></div>
@@ -347,6 +349,8 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 <div class="modal-overlay" id="modal-edit">
   <div class="modal">
     <h3>記録を編集</h3>
+    <!-- ★変更：編集モーダルに日付フィールドを追加 -->
+    <div class="form-row"><label>日付</label><input type="date" id="edit-date"></div>
     <div class="form-row"><label>読んだ人</label><input type="text" id="edit-reader"></div>
     <div class="form-row"><label>教室</label><select id="edit-class"></select></div>
     <div class="form-row"><label>本のタイトル</label><input type="text" id="edit-book"></div>
@@ -386,10 +390,8 @@ const DB = {
 };
 
 // ========================================================
-// GAS通信 ── 全データ共有の核心部分
+// GAS通信
 // ========================================================
-
-/** GASからデータを取得してlocalStorageに反映 */
 async function syncFromGAS(showMsg = false) {
   if (!GAS_URL) return;
   setSyncBar(true);
@@ -413,7 +415,6 @@ async function syncFromGAS(showMsg = false) {
   setSyncBar(false);
 }
 
-/** GASへデータを送信後、レスポンスの最新データで即時反映 */
 async function pushToGAS(type, data) {
   if (!GAS_URL) return;
   const encoded = encodeURIComponent(JSON.stringify(data));
@@ -428,7 +429,6 @@ async function pushToGAS(type, data) {
       refreshAllViews();
     } else {
       console.error('pushToGAS error:', json.error);
-      // GAS書き込みは成功している可能性があるので再取得を試みる
       await syncFromGAS();
     }
   } catch(err) {
@@ -437,7 +437,6 @@ async function pushToGAS(type, data) {
   }
 }
 
-/** 記録保存：ローカル更新 → GAS送信（レスポンスで自動同期） */
 async function saveRecs(v) {
   DB.set('recs', v);
   await pushToGAS('records', v);
@@ -447,7 +446,6 @@ async function saveRes(v) {
   await pushToGAS('reservations', v);
 }
 
-// idを数値統一、日付をハイフン統一
 function normalizeRec(r) { return { ...r, id: Number(r.id) || r.id, date: normDate(r.date) }; }
 function normalizeRes(r) { return { ...r, id: Number(r.id) || r.id, date: normDate(r.date) }; }
 
@@ -474,10 +472,12 @@ let rMonth = new Date(), aMonth = new Date();
 let uCal = new Date(), aCal = new Date();
 let rDate = null, arDate = null, editId = null;
 
-const today = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const today = () => {
+  const d=new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+};
 const fmtD  = d => `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
 const fmtM  = d => `${d.getFullYear()}年${d.getMonth()+1}月`;
-// 日付の正規化（保存・比較用に "YYYY-MM-DD" に統一）
 const normDate = s => {
   if (!s) return '';
   const str = String(s).trim();
@@ -508,7 +508,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const su = DB.get('me',null), sa = DB.get('ia',false);
   if (su && su !== 'admin') document.getElementById('login-name').value = su;
   document.getElementById('record-date-display').textContent = fmtD(new Date());
-  document.getElementById('admin-record-date-display').textContent = fmtD(new Date());
   const ey = document.getElementById('export-year');
   for(let y=new Date().getFullYear();y>=2020;y--) ey.innerHTML += `<option value="${y}">${y}年</option>`;
   document.getElementById('export-month').value = new Date().getMonth()+1;
@@ -573,6 +572,9 @@ function initAdmin() {
   fillNameDropdowns(); renderAdminCal(); renderAdminRecs(); renderAllRes();
   renderCls(); renderWd(); renderJuniors(); renderBlockedDates();
   aMonth=new Date(); document.getElementById('admin-manage-month').textContent=fmtM(aMonth);
+  // ★変更：管理者代理記録の日付欄を当日にリセット
+  const dateEl = document.getElementById('admin-record-date');
+  if (dateEl) dateEl.value = today();
 }
 function initUser() {
   document.getElementById('user-badge-name').textContent=me;
@@ -602,7 +604,6 @@ function buildCalHtml(date, clickFn, targetDateVar) {
     const curDay=new Date(year,month,d).getDay();
     const isSelectable=activeWdays.includes(curDay) && !blocked.includes(dStr) && dStr>=todayStr;
 
-    // その日の予約済み教室を取得
     const reservedCls=getRes().filter(r=>r.date===dStr).map(r=>r.classroom);
     const reservedCount=reservedCls.length;
     const fullyBooked=allCls.length>0 && reservedCount>=allCls.length;
@@ -610,7 +611,6 @@ function buildCalHtml(date, clickFn, targetDateVar) {
 
     const isSel=(targetDateVar==='rDate'&&rDate===dStr)||(targetDateVar==='arDate'&&arDate===dStr);
 
-    // ドット生成（最大4個）
     let dotsHtml='';
     if(reservedCount>0){
       const dotClass=fullyBooked?'cal-dot full':'cal-dot';
@@ -644,7 +644,6 @@ function selectCalDate(varName, dStr) {
   }
 }
 
-/** 選択日の予約状況を教室選択欄の下に表示 */
 function renderReserveStatusForDate(dStr) {
   const msg=document.getElementById('reserve-status-msg'); if(!msg) return;
   const reserved=getRes().filter(r=>r.date===dStr);
@@ -675,7 +674,6 @@ function renderAdminCal() { const el=document.getElementById('admin-calendar'); 
 async function submitReservation() {
   if(!rDate){ toast('日付を選択してください'); return; }
   const cls=document.getElementById('reserve-class').value;
-  // 送信前に最新データで再チェック
   await syncFromGAS();
   if(getRes().find(r=>r.date===rDate&&r.classroom===cls)){ toast('他の端末から予約が入りました。別の教室を選んでください'); checkReservationConflict(); return; }
   const res=getRes();
@@ -715,6 +713,7 @@ async function submitRecord() {
   const note=document.getElementById('record-note').value.trim();
   if(!book){ toast('本のタイトルを入力してください'); return; }
   const recs=getRecs();
+  // 一般ユーザーは当日日付で保存
   recs.push({ id:Date.now(), date:today(), reader:me, classroom:cls, book, note });
   await saveRecs(recs);
   toast('記録を保存しました');
@@ -724,18 +723,23 @@ async function submitRecord() {
 }
 
 async function adminSubmitRecord() {
+  // ★変更：管理者は入力された日付を使用（空の場合は当日）
+  const dateEl = document.getElementById('admin-record-date');
+  const dateVal = (dateEl && dateEl.value) ? normDate(dateEl.value) : today();
   const name=document.getElementById('admin-record-name').value.trim();
   const cls=document.getElementById('admin-record-class').value;
   const book=document.getElementById('admin-record-book').value.trim();
   const note=document.getElementById('admin-record-note').value.trim();
   if(!name||!book){ toast('名前と本のタイトルを入力してください'); return; }
   const recs=getRecs();
-  recs.push({ id:Date.now(), date:today(), reader:name, classroom:cls, book, note });
+  recs.push({ id:Date.now(), date:dateVal, reader:name, classroom:cls, book, note });
   await saveRecs(recs);
   toast('代理記録を保存しました');
   document.getElementById('admin-record-name').value='';
   document.getElementById('admin-record-book').value='';
   document.getElementById('admin-record-note').value='';
+  // ★変更：保存後も日付は当日にリセット
+  if(dateEl) dateEl.value = today();
   renderAdminRecs(); fillNameDropdowns();
 }
 
@@ -749,7 +753,6 @@ function renderMyRecs() {
   const el=document.getElementById('my-records-list'); if(!el) return;
   const mStr=`${rMonth.getFullYear()}-${String(rMonth.getMonth()+1).padStart(2,'0')}`;
   document.getElementById('my-record-month').textContent=fmtM(rMonth);
-  // 自分の記録を表示（名前の大文字小文字・全半角を無視して照合）
   const myName = (me||'').trim();
   const items=getRecs().filter(r => {
     if (!r.date.startsWith(mStr)) return false;
@@ -806,15 +809,26 @@ function renderUserAllRes() {
 function openEdit(id) {
   editId=id;
   const r=getRecs().find(x=>x.id==id); if(!r) return;
+  // ★変更：日付フィールドも読み込む
+  const dateEl = document.getElementById('edit-date');
+  if (dateEl) dateEl.value = normDate(r.date) || today();
   document.getElementById('edit-reader').value=r.reader;
-  document.getElementById('edit-class').value=r.classroom;
+  // edit-class の選択肢を最新に揃えてから値をセット
+  const editClsEl = document.getElementById('edit-class');
+  if (editClsEl) {
+    fillSelect(['edit-class'], getCls());
+    editClsEl.value = r.classroom;
+  }
   document.getElementById('edit-book').value=r.book;
-  document.getElementById('edit-note').value=r.note;
+  document.getElementById('edit-note').value=r.note || '';
   document.getElementById('modal-edit').classList.add('active');
 }
 function closeModal() { document.getElementById('modal-edit').classList.remove('active'); }
 async function saveEdit() {
   const recs=getRecs(); const r=recs.find(x=>x.id==editId); if(!r) return;
+  // ★変更：日付も保存対象に含める
+  const dateEl = document.getElementById('edit-date');
+  if (dateEl && dateEl.value) r.date = normDate(dateEl.value);
   r.reader=document.getElementById('edit-reader').value;
   r.classroom=document.getElementById('edit-class').value;
   r.book=document.getElementById('edit-book').value;
