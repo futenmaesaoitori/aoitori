@@ -54,14 +54,19 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 .form-row input,.form-row select,.form-row textarea { width: 100%; padding: 11px 13px; border: 1.5px solid var(--gray-200); border-radius: 9px; font-size: 15px; font-family: inherit; outline: none; transition: border-color .2s; background: white; -webkit-appearance: none; color: var(--gray-800); }
 .form-row input:focus,.form-row select:focus,.form-row textarea:focus { border-color: var(--green); }
 .form-row textarea { resize: none; height: 72px; }
-.form-row select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a6b5a' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; padding-right: 36px; }
-/* date input のネイティブUIを他のinputと揃える */
+/* 単一選択セレクト（矢印付き） */
+.form-row select:not([multiple]) { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a6b5a' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; padding-right: 36px; }
+/* 複数選択セレクト */
+.form-row select[multiple] { background-image: none; padding-right: 13px; min-height: 140px; height: auto; -webkit-appearance: auto; appearance: auto; overflow-y: auto; }
+.form-row select[multiple] option { padding: 7px 6px; border-radius: 4px; }
+.form-row select[multiple] option:checked { background: var(--green); color: white; }
+.select-hint { font-size: 11px; color: var(--gray-400); margin-top: 5px; }
 .form-row input[type="date"] { -webkit-appearance: none; appearance: none; }
 .date-display { padding: 11px 13px; background: var(--gray-50); border: 1.5px solid var(--gray-200); border-radius: 9px; font-size: 15px; color: var(--gray-600); }
 .record-item { background: var(--gray-50); border-radius: 9px; padding: 12px 14px; border-left: 3px solid var(--green-mid); margin-bottom: 8px; }
 .record-item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
 .record-item-date { font-size: 12px; color: var(--gray-400); }
-.record-item-class { font-size: 12px; font-weight: 600; color: var(--green-dark); background: var(--green-light); padding: 2px 8px; border-radius: 20px; }
+.record-item-class { font-size: 12px; font-weight: 600; color: var(--green-dark); background: var(--green-light); padding: 2px 8px; border-radius: 20px; flex-shrink: 0; max-width: 55%; text-align: right; }
 .record-item-book { font-size: 14px; font-weight: 600; color: var(--gray-800); margin-bottom: 2px; }
 .record-item-reader,.record-item-note { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
 .record-actions { display: flex; gap: 6px; margin-top: 8px; }
@@ -187,9 +192,12 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
     <div class="tab-panel active" id="user-panel-record">
       <div class="card">
         <h3>活動記録を入力</h3>
-        <!-- 一般ユーザーの記録入力：日付は自動（当日）のため表示のみ -->
         <div class="form-row"><label>日付</label><div class="date-display" id="record-date-display"></div></div>
-        <div class="form-row"><label>教室</label><select id="record-class"></select></div>
+        <div class="form-row">
+          <label>教室（複数選択可）</label>
+          <select id="record-class" multiple></select>
+          <div class="select-hint">複数選択：iOSは長押し、PCはCtrl（Mac:⌘）+クリック</div>
+        </div>
         <div class="form-row"><label>読んだ本のタイトル</label><input type="text" id="record-book" placeholder="本のタイトルを入力"></div>
         <div class="form-row"><label>備考</label><textarea id="record-note" placeholder="メモがあれば入力してください"></textarea></div>
         <button class="btn btn-primary" onclick="submitRecord()">記録を保存</button>
@@ -214,7 +222,11 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
       <div class="card">
         <h3>教室を選択して予約</h3>
         <div class="form-row"><label>選択した日付</label><div class="date-display" id="reserve-selected-date">カレンダーから日付を選んでください</div></div>
-        <div class="form-row"><label>教室</label><select id="reserve-class" onchange="checkReservationConflict()"></select></div>
+        <div class="form-row">
+          <label>教室（複数選択可）</label>
+          <select id="reserve-class" multiple onchange="checkReservationConflict()"></select>
+          <div class="select-hint">複数選択：iOSは長押し、PCはCtrl（Mac:⌘）+クリック</div>
+        </div>
         <div id="reserve-status-msg" style="font-size:12px;margin-bottom:10px;color:var(--gray-600);"></div>
         <button class="btn btn-primary" id="reserve-btn" onclick="submitReservation()">予約する</button>
       </div>
@@ -246,14 +258,17 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
     <div class="tab-panel active" id="admin-panel-record">
       <div class="card">
         <h3>活動記録を入力（代理）</h3>
-        <!-- ★変更：管理者の代理記録には日付入力欄を追加（デフォルト当日） -->
         <div class="form-row">
           <label>日付</label>
           <input type="date" id="admin-record-date">
         </div>
         <div class="form-row"><label>読んだ人（名前入力）</label><input type="text" id="admin-record-name" placeholder="名前を入力"></div>
         <div class="form-row"><label>または過去の名前から選択</label><select id="admin-record-name-select" onchange="document.getElementById('admin-record-name').value=this.value"><option value="">— 選択 —</option></select></div>
-        <div class="form-row"><label>教室</label><select id="admin-record-class"></select></div>
+        <div class="form-row">
+          <label>教室（複数選択可）</label>
+          <select id="admin-record-class" multiple></select>
+          <div class="select-hint">複数選択：iOSは長押し、PCはCtrl（Mac:⌘）+クリック</div>
+        </div>
         <div class="form-row"><label>読んだ本のタイトル</label><input type="text" id="admin-record-book" placeholder="本のタイトルを入力"></div>
         <div class="form-row"><label>備考</label><textarea id="admin-record-note" placeholder="メモがあれば入力"></textarea></div>
         <button class="btn btn-primary" onclick="adminSubmitRecord()">記録を保存</button>
@@ -280,7 +295,11 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
         <div class="form-row"><label>選択した日付</label><div class="date-display" id="admin-reserve-date">カレンダーから日付を選んでください</div></div>
         <div class="form-row"><label>読んだ人（名前入力）</label><input type="text" id="admin-reserve-name" placeholder="名前を入力"></div>
         <div class="form-row"><label>または過去の名前から選択</label><select id="admin-reserve-name-select" onchange="document.getElementById('admin-reserve-name').value=this.value"><option value="">— 選択 —</option></select></div>
-        <div class="form-row"><label>教室</label><select id="admin-reserve-class"></select></div>
+        <div class="form-row">
+          <label>教室（複数選択可）</label>
+          <select id="admin-reserve-class" multiple></select>
+          <div class="select-hint">複数選択：iOSは長押し、PCはCtrl（Mac:⌘）+クリック</div>
+        </div>
         <button class="btn btn-primary" onclick="adminSubmitReservation()">予約する</button>
       </div>
       <div class="card"><h3>全員の予約状況</h3><div id="all-reservations-list"></div></div>
@@ -349,10 +368,13 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 <div class="modal-overlay" id="modal-edit">
   <div class="modal">
     <h3>記録を編集</h3>
-    <!-- ★変更：編集モーダルに日付フィールドを追加 -->
     <div class="form-row"><label>日付</label><input type="date" id="edit-date"></div>
     <div class="form-row"><label>読んだ人</label><input type="text" id="edit-reader"></div>
-    <div class="form-row"><label>教室</label><select id="edit-class"></select></div>
+    <div class="form-row">
+      <label>教室（複数選択可）</label>
+      <select id="edit-class" multiple></select>
+      <div class="select-hint">複数選択：iOSは長押し、PCはCtrl（Mac:⌘）+クリック</div>
+    </div>
     <div class="form-row"><label>本のタイトル</label><input type="text" id="edit-book"></div>
     <div class="form-row"><label>備考</label><textarea id="edit-note"></textarea></div>
     <div class="modal-btns">
@@ -437,17 +459,11 @@ async function pushToGAS(type, data) {
   }
 }
 
-async function saveRecs(v) {
-  DB.set('recs', v);
-  await pushToGAS('records', v);
-}
-async function saveRes(v) {
-  DB.set('res', v);
-  await pushToGAS('reservations', v);
-}
+async function saveRecs(v) { DB.set('recs', v); await pushToGAS('records', v); }
+async function saveRes(v)  { DB.set('res', v);  await pushToGAS('reservations', v); }
 
-function normalizeRec(r) { return { ...r, id: Number(r.id) || r.id, date: normDate(r.date) }; }
-function normalizeRes(r) { return { ...r, id: Number(r.id) || r.id, date: normDate(r.date) }; }
+function normalizeRec(r) { return { ...r, id: Number(r.id) || r.id, date: normDate(r.date), classroom: normClassroom(r.classroom) }; }
+function normalizeRes(r) { return { ...r, id: Number(r.id) || r.id, date: normDate(r.date), classroom: normClassroom(r.classroom) }; }
 
 function setSyncBar(show) {
   ['user-sync-bar','admin-sync-bar'].forEach(id => {
@@ -459,13 +475,49 @@ function setSyncBar(show) {
 // ========================================================
 // データアクセサ
 // ========================================================
-const DEFAULT_CLS = ['1年1組','1年2組','1年3組','1年学年全体','2年1組','2年2組','2年3組','2年学年全体','3年1組','3年2組','3年3組','3年学年全体','4年1組','4年2組','4年3組','4年学年全体','5年1組','5年2組','5年3組','5年学年全体','6年1組','6年2組','6年3組','6年学年全体'];
+// ★学年全体を削除したデフォルト教室リスト
+const DEFAULT_CLS = [
+  '1年1組','1年2組','1年3組',
+  '2年1組','2年2組','2年3組',
+  '3年1組','3年2組','3年3組',
+  '4年1組','4年2組','4年3組',
+  '5年1組','5年2組','5年3組',
+  '6年1組','6年2組','6年3組'
+];
 const DEFAULT_PW = '3359';
-const getCls = () => DB.get('cls', DEFAULT_CLS);
-const getWd  = () => DB.get('wd', [4]);
-const getPw  = () => DB.get('pw', DEFAULT_PW);
+const getCls  = () => DB.get('cls', DEFAULT_CLS);
+const getWd   = () => DB.get('wd', [4]);
+const getPw   = () => DB.get('pw', DEFAULT_PW);
 const getRecs = () => DB.get('recs', []);
 const getRes  = () => DB.get('res', []);
+
+// ★教室を常に配列で扱うヘルパー
+function normClassroom(c) {
+  if (!c) return [];
+  if (Array.isArray(c)) return c.filter(Boolean);
+  return String(c).split(',').map(s => s.trim()).filter(Boolean);
+}
+
+// ★教室配列を表示用文字列に変換
+function dispClassroom(c) {
+  const arr = normClassroom(c);
+  return arr.length ? arr.join('・') : '教室未設定';
+}
+
+// ★複数選択セレクトから選択値配列を取得
+function getSelectValues(id) {
+  const el = document.getElementById(id);
+  if (!el) return [];
+  return Array.from(el.selectedOptions).map(o => o.value);
+}
+
+// ★複数選択セレクトに値をセット
+function setSelectValues(id, values) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const arr = normClassroom(values);
+  Array.from(el.options).forEach(opt => { opt.selected = arr.includes(opt.value); });
+}
 
 let me = null, isAdmin = false;
 let rMonth = new Date(), aMonth = new Date();
@@ -556,7 +608,14 @@ function logoutAdmin() { logoutUser(); }
 // ========================================================
 // セレクト・ドロップダウン初期化
 // ========================================================
-function fillSelect(ids, items) { ids.forEach(id=>{ const el=document.getElementById(id); if(!el) return; el.innerHTML=items.map(c=>`<option value="${c}">${c}</option>`).join(''); }); }
+function fillSelect(ids, items) {
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = items.map(c => `<option value="${c}">${c}</option>`).join('');
+  });
+}
+
 function fillNameDropdowns() {
   const recNames=[...new Set(getRecs().map(r=>r.reader))].filter(Boolean);
   const juniors=DB.get('juniors',[]).map(j=>j.name+' (Jr)');
@@ -566,16 +625,20 @@ function fillNameDropdowns() {
     el.innerHTML='<option value="">— 選択 —</option>'+names.map(n=>`<option value="${n}">${n}</option>`).join('');
   });
 }
+
 function initAdmin() {
   const cls=getCls();
-  fillSelect(['admin-record-class','admin-reserve-class','edit-class','junior-class','record-class','reserve-class'], cls);
+  // 複数選択セレクト群（multiple属性あり）
+  fillSelect(['admin-record-class','admin-reserve-class','edit-class','record-class','reserve-class'], cls);
+  // 単一選択セレクト
+  fillSelect(['junior-class'], cls);
   fillNameDropdowns(); renderAdminCal(); renderAdminRecs(); renderAllRes();
   renderCls(); renderWd(); renderJuniors(); renderBlockedDates();
   aMonth=new Date(); document.getElementById('admin-manage-month').textContent=fmtM(aMonth);
-  // ★変更：管理者代理記録の日付欄を当日にリセット
   const dateEl = document.getElementById('admin-record-date');
   if (dateEl) dateEl.value = today();
 }
+
 function initUser() {
   document.getElementById('user-badge-name').textContent=me;
   fillSelect(['record-class','reserve-class'], getCls());
@@ -604,10 +667,14 @@ function buildCalHtml(date, clickFn, targetDateVar) {
     const curDay=new Date(year,month,d).getDay();
     const isSelectable=activeWdays.includes(curDay) && !blocked.includes(dStr) && dStr>=todayStr;
 
-    const reservedCls=getRes().filter(r=>r.date===dStr).map(r=>r.classroom);
-    const reservedCount=reservedCls.length;
-    const fullyBooked=allCls.length>0 && reservedCount>=allCls.length;
-    const hasPartial=reservedCount>0 && !fullyBooked;
+    // ★予約済み教室を配列から集計
+    const bookedSet = new Set();
+    getRes().filter(r => r.date === dStr).forEach(r => {
+      normClassroom(r.classroom).forEach(c => bookedSet.add(c));
+    });
+    const reservedCount = bookedSet.size;
+    const fullyBooked = allCls.length > 0 && reservedCount >= allCls.length;
+    const hasPartial = reservedCount > 0 && !fullyBooked;
 
     const isSel=(targetDateVar==='rDate'&&rDate===dStr)||(targetDateVar==='arDate'&&arDate===dStr);
 
@@ -619,8 +686,7 @@ function buildCalHtml(date, clickFn, targetDateVar) {
     }
 
     if(isSelectable && !fullyBooked){
-      const bookedClass=hasPartial?'has-partial':'';
-      html+=`<div class="cal-cell pick ${isSel?'sel':''} ${bookedClass}" onclick="selectCalDate('${targetDateVar}','${dStr}')"><span class="cal-num">${d}</span>${dotsHtml}</div>`;
+      html+=`<div class="cal-cell pick ${isSel?'sel':''}" onclick="selectCalDate('${targetDateVar}','${dStr}')"><span class="cal-num">${d}</span>${dotsHtml}</div>`;
     } else {
       const dimClass=fullyBooked?'booked':'dim';
       html+=`<div class="cal-cell ${dimClass}"><span class="cal-num">${d}</span>${dotsHtml}</div>`;
@@ -648,16 +714,29 @@ function renderReserveStatusForDate(dStr) {
   const msg=document.getElementById('reserve-status-msg'); if(!msg) return;
   const reserved=getRes().filter(r=>r.date===dStr);
   if(!reserved.length){ msg.textContent=''; return; }
-  const lines=reserved.map(r=>`🔴 ${r.classroom}：${r.name}`).join('　');
+  // ★教室→名前のマップを構築
+  const bookedMap={};
+  reserved.forEach(r => {
+    normClassroom(r.classroom).forEach(c => { bookedMap[c]=r.name; });
+  });
+  const lines=Object.entries(bookedMap).map(([c,n])=>`🔴 ${c}：${n}`).join('　');
   msg.innerHTML=`<span style="color:var(--red);">この日の予約済み教室：</span>${lines}`;
 }
 
 function checkReservationConflict() {
   const btn=document.getElementById('reserve-btn'); if(!btn) return;
   if(!rDate){ btn.textContent='予約する'; btn.disabled=false; btn.style.opacity='1'; return; }
-  const cls=document.getElementById('reserve-class').value;
-  if(getRes().find(r=>r.date===rDate&&r.classroom===cls)){
-    btn.textContent='この教室はすでに予約済みです'; btn.disabled=true; btn.style.opacity='0.5';
+  const selectedCls = getSelectValues('reserve-class');
+  if(selectedCls.length===0){
+    btn.textContent='教室を選択してください'; btn.disabled=true; btn.style.opacity='0.5'; return;
+  }
+  // ★複数教室の競合チェック
+  const bookedSet = new Set();
+  getRes().filter(r=>r.date===rDate).forEach(r=>{ normClassroom(r.classroom).forEach(c=>bookedSet.add(c)); });
+  const conflicts = selectedCls.filter(c=>bookedSet.has(c));
+  if(conflicts.length>0){
+    btn.textContent=`${conflicts.join('・')}はすでに予約済みです`;
+    btn.disabled=true; btn.style.opacity='0.5';
   } else {
     btn.textContent='予約する'; btn.disabled=false; btn.style.opacity='1';
   }
@@ -673,11 +752,22 @@ function renderAdminCal() { const el=document.getElementById('admin-calendar'); 
 // ========================================================
 async function submitReservation() {
   if(!rDate){ toast('日付を選択してください'); return; }
-  const cls=document.getElementById('reserve-class').value;
+  const selectedCls = getSelectValues('reserve-class');
+  if(selectedCls.length===0){ toast('教室を選択してください'); return; }
+
   await syncFromGAS();
-  if(getRes().find(r=>r.date===rDate&&r.classroom===cls)){ toast('他の端末から予約が入りました。別の教室を選んでください'); checkReservationConflict(); return; }
+
+  // ★再チェック（他端末との競合）
+  const bookedSet = new Set();
+  getRes().filter(r=>r.date===rDate).forEach(r=>{ normClassroom(r.classroom).forEach(c=>bookedSet.add(c)); });
+  const conflicts = selectedCls.filter(c=>bookedSet.has(c));
+  if(conflicts.length>0){
+    toast(`${conflicts.join('・')}は他から予約が入りました`);
+    checkReservationConflict(); return;
+  }
+
   const res=getRes();
-  res.push({ id:Date.now(), date:rDate, name:me, classroom:cls });
+  res.push({ id:Date.now(), date:rDate, name:me, classroom:selectedCls });
   await saveRes(res);
   toast('予約しました');
   renderMyCal(); renderMyRes(); renderUserAllRes();
@@ -686,10 +776,11 @@ async function submitReservation() {
 async function adminSubmitReservation() {
   if(!arDate){ toast('日付を選択してください'); return; }
   const name=document.getElementById('admin-reserve-name').value.trim();
-  const cls=document.getElementById('admin-reserve-class').value;
+  const selectedCls = getSelectValues('admin-reserve-class');
   if(!name){ toast('名前を入力してください'); return; }
+  if(selectedCls.length===0){ toast('教室を選択してください'); return; }
   const res=getRes();
-  res.push({ id:Date.now(), date:arDate, name, classroom:cls });
+  res.push({ id:Date.now(), date:arDate, name, classroom:selectedCls });
   await saveRes(res);
   toast('代理予約しました');
   document.getElementById('admin-reserve-name').value='';
@@ -709,12 +800,12 @@ async function cancelRes(id) {
 // ========================================================
 async function submitRecord() {
   const book=document.getElementById('record-book').value.trim();
-  const cls=document.getElementById('record-class').value;
+  const selectedCls = getSelectValues('record-class');
   const note=document.getElementById('record-note').value.trim();
   if(!book){ toast('本のタイトルを入力してください'); return; }
+  if(selectedCls.length===0){ toast('教室を選択してください'); return; }
   const recs=getRecs();
-  // 一般ユーザーは当日日付で保存
-  recs.push({ id:Date.now(), date:today(), reader:me, classroom:cls, book, note });
+  recs.push({ id:Date.now(), date:today(), reader:me, classroom:selectedCls, book, note });
   await saveRecs(recs);
   toast('記録を保存しました');
   document.getElementById('record-book').value='';
@@ -723,22 +814,21 @@ async function submitRecord() {
 }
 
 async function adminSubmitRecord() {
-  // ★変更：管理者は入力された日付を使用（空の場合は当日）
   const dateEl = document.getElementById('admin-record-date');
   const dateVal = (dateEl && dateEl.value) ? normDate(dateEl.value) : today();
   const name=document.getElementById('admin-record-name').value.trim();
-  const cls=document.getElementById('admin-record-class').value;
+  const selectedCls = getSelectValues('admin-record-class');
   const book=document.getElementById('admin-record-book').value.trim();
   const note=document.getElementById('admin-record-note').value.trim();
   if(!name||!book){ toast('名前と本のタイトルを入力してください'); return; }
+  if(selectedCls.length===0){ toast('教室を選択してください'); return; }
   const recs=getRecs();
-  recs.push({ id:Date.now(), date:dateVal, reader:name, classroom:cls, book, note });
+  recs.push({ id:Date.now(), date:dateVal, reader:name, classroom:selectedCls, book, note });
   await saveRecs(recs);
   toast('代理記録を保存しました');
   document.getElementById('admin-record-name').value='';
   document.getElementById('admin-record-book').value='';
   document.getElementById('admin-record-note').value='';
-  // ★変更：保存後も日付は当日にリセット
   if(dateEl) dateEl.value = today();
   renderAdminRecs(); fillNameDropdowns();
 }
@@ -753,13 +843,13 @@ function renderMyRecs() {
   const el=document.getElementById('my-records-list'); if(!el) return;
   const mStr=`${rMonth.getFullYear()}-${String(rMonth.getMonth()+1).padStart(2,'0')}`;
   document.getElementById('my-record-month').textContent=fmtM(rMonth);
-  const myName = (me||'').trim();
-  const items=getRecs().filter(r => {
-    if (!r.date.startsWith(mStr)) return false;
-    return r.reader && r.reader.trim() === myName;
+  const myName=(me||'').trim();
+  const items=getRecs().filter(r=>{
+    if(!r.date.startsWith(mStr)) return false;
+    return r.reader && r.reader.trim()===myName;
   });
   if(!items.length){ el.innerHTML=emptyHtml('📝','今月の記録はありません'); return; }
-  el.innerHTML=items.map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${normDate(r.date)}</span><span class="record-item-class">${r.classroom}</span></div><div class="record-item-book">📖 ${r.book}</div>${r.note?`<div class="record-item-note">💡 ${r.note}</div>`:''}</div>`).join('');
+  el.innerHTML=items.map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${normDate(r.date)}</span><span class="record-item-class">${dispClassroom(r.classroom)}</span></div><div class="record-item-book">📖 ${r.book}</div>${r.note?`<div class="record-item-note">💡 ${r.note}</div>`:''}</div>`).join('');
 }
 
 function renderAdminRecs() {
@@ -768,21 +858,21 @@ function renderAdminRecs() {
   document.getElementById('admin-manage-month').textContent=fmtM(aMonth);
   const items=getRecs().filter(r=>r.date.startsWith(mStr)).sort((a,b)=>a.date.localeCompare(b.date));
   if(!items.length){ el.innerHTML=emptyHtml('📝','対象月の記録はありません'); return; }
-  el.innerHTML=items.map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${r.date}</span><span class="record-item-class">${r.classroom}</span></div><div class="record-item-book">📖 ${r.book} <span style="font-weight:normal;font-size:12px;color:var(--gray-600);">（👤 ${r.reader}）</span></div><div class="record-actions"><button class="btn-edit" onclick="openEdit(${r.id})">編集</button><button class="btn-del" onclick="deleteRec(${r.id})">削除</button></div></div>`).join('');
+  el.innerHTML=items.map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${r.date}</span><span class="record-item-class">${dispClassroom(r.classroom)}</span></div><div class="record-item-book">📖 ${r.book} <span style="font-weight:normal;font-size:12px;color:var(--gray-600);">（👤 ${r.reader}）</span></div><div class="record-actions"><button class="btn-edit" onclick="openEdit(${r.id})">編集</button><button class="btn-del" onclick="deleteRec(${r.id})">削除</button></div></div>`).join('');
 }
 
 function renderMyRes() {
   const el=document.getElementById('my-reservations-list'); if(!el) return;
   const items=getRes().filter(r=>r.name===me).sort((a,b)=>a.date.localeCompare(b.date));
   if(!items.length){ el.innerHTML=emptyHtml('📅','あなたの予約はありません'); return; }
-  el.innerHTML=items.map(r=>`<div class="reservation-item"><div><div class="res-date">${fmtDS(r.date)}</div><div class="res-class">${r.classroom}</div></div><button class="btn-cancel" onclick="cancelRes(${r.id})">取消</button></div>`).join('');
+  el.innerHTML=items.map(r=>`<div class="reservation-item"><div><div class="res-date">${fmtDS(r.date)}</div><div class="res-class">${dispClassroom(r.classroom)}</div></div><button class="btn-cancel" onclick="cancelRes(${r.id})">取消</button></div>`).join('');
 }
 
 function renderAllRes() {
   const el=document.getElementById('all-reservations-list'); if(!el) return;
   const items=getRes().sort((a,b)=>a.date.localeCompare(b.date));
   if(!items.length){ el.innerHTML=emptyHtml('📅','予約はありません'); return; }
-  el.innerHTML=items.map(r=>`<div class="reservation-item"><div><div class="res-date">${fmtDS(r.date)}</div><div class="res-class">${r.classroom} <span style="color:var(--gray-600);">👤 ${r.name}</span></div></div><button class="btn-cancel" onclick="cancelRes(${r.id})">削除</button></div>`).join('');
+  el.innerHTML=items.map(r=>`<div class="reservation-item"><div><div class="res-date">${fmtDS(r.date)}</div><div class="res-class">${dispClassroom(r.classroom)} <span style="color:var(--gray-600);">👤 ${r.name}</span></div></div><button class="btn-cancel" onclick="cancelRes(${r.id})">削除</button></div>`).join('');
 }
 
 function renderUserAllRes() {
@@ -795,7 +885,7 @@ function renderUserAllRes() {
       <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
         <div>
           <div class="res-date">${fmtDS(r.date)}</div>
-          <div class="res-class">${r.classroom}</div>
+          <div class="res-class">${dispClassroom(r.classroom)}</div>
           <div class="res-who">👤 ${r.name}</div>
         </div>
         ${r.name===me?`<button class="btn-cancel" onclick="cancelRes(${r.id})">取消</button>`:''}
@@ -809,28 +899,23 @@ function renderUserAllRes() {
 function openEdit(id) {
   editId=id;
   const r=getRecs().find(x=>x.id==id); if(!r) return;
-  // ★変更：日付フィールドも読み込む
-  const dateEl = document.getElementById('edit-date');
-  if (dateEl) dateEl.value = normDate(r.date) || today();
+  const dateEl=document.getElementById('edit-date');
+  if(dateEl) dateEl.value=normDate(r.date)||today();
   document.getElementById('edit-reader').value=r.reader;
-  // edit-class の選択肢を最新に揃えてから値をセット
-  const editClsEl = document.getElementById('edit-class');
-  if (editClsEl) {
-    fillSelect(['edit-class'], getCls());
-    editClsEl.value = r.classroom;
-  }
+  // ★複数選択セレクトに教室配列をセット
+  fillSelect(['edit-class'], getCls());
+  setSelectValues('edit-class', r.classroom);
   document.getElementById('edit-book').value=r.book;
-  document.getElementById('edit-note').value=r.note || '';
+  document.getElementById('edit-note').value=r.note||'';
   document.getElementById('modal-edit').classList.add('active');
 }
 function closeModal() { document.getElementById('modal-edit').classList.remove('active'); }
 async function saveEdit() {
   const recs=getRecs(); const r=recs.find(x=>x.id==editId); if(!r) return;
-  // ★変更：日付も保存対象に含める
-  const dateEl = document.getElementById('edit-date');
-  if (dateEl && dateEl.value) r.date = normDate(dateEl.value);
+  const dateEl=document.getElementById('edit-date');
+  if(dateEl&&dateEl.value) r.date=normDate(dateEl.value);
   r.reader=document.getElementById('edit-reader').value;
-  r.classroom=document.getElementById('edit-class').value;
+  r.classroom=getSelectValues('edit-class');  // ★配列で保存
   r.book=document.getElementById('edit-book').value;
   r.note=document.getElementById('edit-note').value;
   await saveRecs(recs); closeModal(); renderAdminRecs(); toast('変更しました');
@@ -882,7 +967,8 @@ function exportCSV() {
   const y=document.getElementById('export-year').value, m=String(document.getElementById('export-month').value).padStart(2,'0');
   const items=getRecs().filter(r=>r.date.startsWith(`${y}-${m}`));
   if(!items.length){ toast('対象データの記録がありません'); return; }
-  let csv='日付,教室,読んだ本,読んだ人,備考\n'+items.map(r=>`"${r.date}","${r.classroom}","${r.book}","${r.reader}","${r.note}"`).join('\n');
+  // ★教室配列をカンマ区切りでCSVに出力
+  let csv='日付,教室,読んだ本,読んだ人,備考\n'+items.map(r=>`"${r.date}","${dispClassroom(r.classroom)}","${r.book}","${r.reader}","${r.note}"`).join('\n');
   const bom=new Uint8Array([0xEF,0xBB,0xBF]), blob=new Blob([bom,csv],{type:'text/csv'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`よみきかせ記録_${y}年${m}月.csv`; a.click();
 }
