@@ -64,9 +64,10 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 .form-row input[type="date"] { -webkit-appearance: none; appearance: none; }
 .date-display { padding: 11px 13px; background: var(--gray-50); border: 1.5px solid var(--gray-200); border-radius: 9px; font-size: 15px; color: var(--gray-600); }
 .record-item { background: var(--gray-50); border-radius: 9px; padding: 12px 14px; border-left: 3px solid var(--green-mid); margin-bottom: 8px; }
-.record-item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
-.record-item-date { font-size: 12px; color: var(--gray-400); }
-.record-item-class { font-size: 12px; font-weight: 600; color: var(--green-dark); background: var(--green-light); padding: 2px 8px; border-radius: 20px; flex-shrink: 0; max-width: 55%; text-align: right; }
+.record-item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 6px; }
+.record-item-date { font-size: 12px; color: var(--gray-400); white-space: nowrap; }
+.record-item-classes { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.record-item-class { font-size: 12px; font-weight: 600; color: var(--green-dark); background: var(--green-light); padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
 .record-item-book { font-size: 14px; font-weight: 600; color: var(--gray-800); margin-bottom: 2px; }
 .record-item-reader,.record-item-note { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
 .record-actions { display: flex; gap: 6px; margin-top: 8px; }
@@ -849,7 +850,7 @@ function renderMyRecs() {
     return r.reader && r.reader.trim()===myName;
   });
   if(!items.length){ el.innerHTML=emptyHtml('📝','今月の記録はありません'); return; }
-  el.innerHTML=items.map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${normDate(r.date)}</span><span class="record-item-class">${dispClassroom(r.classroom)}</span></div><div class="record-item-book">📖 ${r.book}</div>${r.note?`<div class="record-item-note">💡 ${r.note}</div>`:''}</div>`).join('');
+  el.innerHTML=items.map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${normDate(r.date)}</span><div class="record-item-classes">${normClassroom(r.classroom).map(c=>`<span class="record-item-class">${c}</span>`).join('')}</div></div><div class="record-item-book">📖 ${r.book}</div>${r.note?`<div class="record-item-note">💡 ${r.note}</div>`:''}</div>`).join('');
 }
 
 function renderAdminRecs() {
@@ -858,7 +859,7 @@ function renderAdminRecs() {
   document.getElementById('admin-manage-month').textContent=fmtM(aMonth);
   const items=getRecs().filter(r=>r.date.startsWith(mStr)).sort((a,b)=>a.date.localeCompare(b.date));
   if(!items.length){ el.innerHTML=emptyHtml('📝','対象月の記録はありません'); return; }
-  el.innerHTML=items.map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${r.date}</span><span class="record-item-class">${dispClassroom(r.classroom)}</span></div><div class="record-item-book">📖 ${r.book} <span style="font-weight:normal;font-size:12px;color:var(--gray-600);">（👤 ${r.reader}）</span></div><div class="record-actions"><button class="btn-edit" onclick="openEdit(${r.id})">編集</button><button class="btn-del" onclick="deleteRec(${r.id})">削除</button></div></div>`).join('');
+  el.innerHTML=items.map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${r.date}</span><div class="record-item-classes">${normClassroom(r.classroom).map(c=>`<span class="record-item-class">${c}</span>`).join('')}</div></div><div class="record-item-book">📖 ${r.book} <span style="font-weight:normal;font-size:12px;color:var(--gray-600);">（👤 ${r.reader}）</span></div><div class="record-actions"><button class="btn-edit" onclick="openEdit(${r.id})">編集</button><button class="btn-del" onclick="deleteRec(${r.id})">削除</button></div></div>`).join('');
 }
 
 function renderMyRes() {
