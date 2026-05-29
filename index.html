@@ -54,25 +54,44 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 .form-row input,.form-row select,.form-row textarea { width: 100%; padding: 11px 13px; border: 1.5px solid var(--gray-200); border-radius: 9px; font-size: 15px; font-family: inherit; outline: none; transition: border-color .2s; background: white; -webkit-appearance: none; color: var(--gray-800); }
 .form-row input:focus,.form-row select:focus,.form-row textarea:focus { border-color: var(--green); }
 .form-row textarea { resize: none; height: 72px; }
-/* 単一選択セレクト（矢印付き） */
 .form-row select:not([multiple]) { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a6b5a' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; padding-right: 36px; }
-/* 複数選択セレクト */
 .form-row select[multiple] { background-image: none; padding-right: 13px; min-height: 140px; height: auto; -webkit-appearance: auto; appearance: auto; overflow-y: auto; }
 .form-row select[multiple] option { padding: 7px 6px; border-radius: 4px; }
 .form-row select[multiple] option:checked { background: var(--green); color: white; }
 .select-hint { font-size: 11px; color: var(--gray-400); margin-top: 5px; }
 .form-row input[type="date"] { -webkit-appearance: none; appearance: none; }
 .date-display { padding: 11px 13px; background: var(--gray-50); border: 1.5px solid var(--gray-200); border-radius: 9px; font-size: 15px; color: var(--gray-600); }
+
+/* ★ 複数冊入力エリア */
+.books-container { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+.book-input-row { display: flex; align-items: center; gap: 8px; }
+.book-input-row input { flex: 1; padding: 11px 13px; border: 1.5px solid var(--gray-200); border-radius: 9px; font-size: 15px; font-family: inherit; outline: none; transition: border-color .2s; background: white; color: var(--gray-800); -webkit-appearance: none; }
+.book-input-row input:focus { border-color: var(--green); }
+.book-num-label { font-size: 12px; font-weight: 700; color: var(--green-dark); background: var(--green-light); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.btn-remove-book { background: var(--red-light); border: none; color: var(--red); width: 28px; height: 28px; border-radius: 7px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: inherit; }
+.btn-add-book { display: flex; align-items: center; gap: 6px; padding: 9px 14px; background: var(--green-light); color: var(--green-dark); border: 1.5px dashed var(--green-mid); border-radius: 9px; font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; width: 100%; justify-content: center; margin-bottom: 4px; transition: background .15s; }
+.btn-add-book:active { background: #d0edda; }
+
+/* ★ 記録アイテム */
 .record-item { background: var(--gray-50); border-radius: 9px; padding: 12px 14px; border-left: 3px solid var(--green-mid); margin-bottom: 8px; }
 .record-item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 6px; }
 .record-item-date { font-size: 12px; color: var(--gray-400); white-space: nowrap; }
 .record-item-classes { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
 .record-item-class { font-size: 12px; font-weight: 600; color: var(--green-dark); background: var(--green-light); padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
 .record-item-book { font-size: 14px; font-weight: 600; color: var(--gray-800); margin-bottom: 2px; }
+.record-item-book-list { margin-top: 4px; display: flex; flex-direction: column; gap: 3px; }
+.record-item-book-entry { font-size: 13px; font-weight: 600; color: var(--gray-800); display: flex; align-items: center; gap: 5px; }
+.record-item-book-num { font-size: 11px; font-weight: 700; color: var(--green-dark); background: var(--green-light); width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .record-item-reader,.record-item-note { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
 .record-actions { display: flex; gap: 6px; margin-top: 8px; }
 .btn-edit { background: var(--green-light); color: var(--green-dark); border: none; padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit; }
 .btn-del { background: var(--red-light); color: var(--red); border: none; padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit; }
+
+/* ★ 全員の今月の記録（一般ユーザー向け） */
+.all-record-item { background: white; border-radius: 9px; padding: 11px 13px; border: 1px solid var(--gray-200); margin-bottom: 7px; }
+.all-record-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; gap: 6px; }
+.all-record-reader { font-size: 12px; font-weight: 600; color: var(--green-dark); background: var(--green-light); padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+
 .calendar { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 14px; }
 .cal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--green-dark); }
 .cal-title { color: white; font-size: 15px; font-weight: 700; }
@@ -127,8 +146,6 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 .cal-legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11px; color: var(--gray-600); padding: 8px 12px; border-top: 1px solid var(--gray-200); }
 .cal-legend-item { display: flex; align-items: center; gap: 4px; }
 .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-.booked-badge { display: inline-block; font-size: 10px; background: var(--red-light); color: var(--red); border-radius: 4px; padding: 1px 5px; margin-left: 4px; }
-.partial-badge { display: inline-block; font-size: 10px; background: var(--amber-light); color: #8a5500; border-radius: 4px; padding: 1px 5px; margin-left: 4px; }
 </style>
 </head>
 <body>
@@ -191,6 +208,7 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
   </div>
   <div class="app-content">
     <div class="tab-panel active" id="user-panel-record">
+      <!-- ★ 自分の活動記録入力 -->
       <div class="card">
         <h3>活動記録を入力</h3>
         <div class="form-row"><label>日付</label><div class="date-display" id="record-date-display"></div></div>
@@ -199,18 +217,39 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
           <select id="record-class" multiple></select>
           <div class="select-hint">複数選択：iOSは長押し、PCはCtrl（Mac:⌘）+クリック</div>
         </div>
-        <div class="form-row"><label>読んだ本のタイトル</label><input type="text" id="record-book" placeholder="本のタイトルを入力"></div>
+        <!-- ★ 複数冊入力エリア -->
+        <div class="form-row">
+          <label>読んだ本のタイトル</label>
+          <div class="books-container" id="record-books-container">
+            <div class="book-input-row" data-idx="0">
+              <div class="book-num-label">1</div>
+              <input type="text" placeholder="本のタイトルを入力">
+            </div>
+          </div>
+          <button class="btn-add-book" onclick="addBookInput('record-books-container')">＋ もう1冊追加</button>
+        </div>
         <div class="form-row"><label>備考</label><textarea id="record-note" placeholder="メモがあれば入力してください"></textarea></div>
         <button class="btn btn-primary" onclick="submitRecord()">記録を保存</button>
       </div>
+      <!-- ★ 自分の今月の記録 -->
       <div class="card">
-        <h3>今月の記録</h3>
+        <h3>自分の今月の記録</h3>
         <div class="month-nav">
           <button class="month-btn" onclick="changeRecordMonth(-1)">←</button>
           <div class="month-label" id="my-record-month"></div>
           <button class="month-btn" onclick="changeRecordMonth(1)">→</button>
         </div>
         <div id="my-records-list"></div>
+      </div>
+      <!-- ★ 全員の今月の記録（新規追加） -->
+      <div class="card">
+        <h3>みんなの今月の記録</h3>
+        <div class="month-nav">
+          <button class="month-btn" onclick="changeAllRecordMonth(-1)">←</button>
+          <div class="month-label" id="all-record-month"></div>
+          <button class="month-btn" onclick="changeAllRecordMonth(1)">→</button>
+        </div>
+        <div id="all-records-list"></div>
       </div>
     </div>
     <div class="tab-panel" id="user-panel-reserve">
@@ -270,7 +309,17 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
           <select id="admin-record-class" multiple></select>
           <div class="select-hint">複数選択：iOSは長押し、PCはCtrl（Mac:⌘）+クリック</div>
         </div>
-        <div class="form-row"><label>読んだ本のタイトル</label><input type="text" id="admin-record-book" placeholder="本のタイトルを入力"></div>
+        <!-- ★ 管理者用複数冊入力 -->
+        <div class="form-row">
+          <label>読んだ本のタイトル</label>
+          <div class="books-container" id="admin-record-books-container">
+            <div class="book-input-row" data-idx="0">
+              <div class="book-num-label">1</div>
+              <input type="text" placeholder="本のタイトルを入力">
+            </div>
+          </div>
+          <button class="btn-add-book" onclick="addBookInput('admin-record-books-container')">＋ もう1冊追加</button>
+        </div>
         <div class="form-row"><label>備考</label><textarea id="admin-record-note" placeholder="メモがあれば入力"></textarea></div>
         <button class="btn btn-primary" onclick="adminSubmitRecord()">記録を保存</button>
       </div>
@@ -376,7 +425,17 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
       <select id="edit-class" multiple></select>
       <div class="select-hint">複数選択：iOSは長押し、PCはCtrl（Mac:⌘）+クリック</div>
     </div>
-    <div class="form-row"><label>本のタイトル</label><input type="text" id="edit-book"></div>
+    <!-- ★ 編集モーダルの複数冊 -->
+    <div class="form-row">
+      <label>読んだ本のタイトル</label>
+      <div class="books-container" id="edit-books-container">
+        <div class="book-input-row" data-idx="0">
+          <div class="book-num-label">1</div>
+          <input type="text" placeholder="本のタイトルを入力">
+        </div>
+      </div>
+      <button class="btn-add-book" onclick="addBookInput('edit-books-container')">＋ もう1冊追加</button>
+    </div>
     <div class="form-row"><label>備考</label><textarea id="edit-note"></textarea></div>
     <div class="modal-btns">
       <button class="btn btn-outline" onclick="closeModal()">キャンセル</button>
@@ -405,7 +464,7 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbynTtMKaWth0q5y0fJyb7q5t59gn9gt00--AARMc2H_IOu4P0VqGTI0dNnus_wQMrV4Vg/exec';
 
 // ========================================================
-// ローカルキャッシュ（端末内一時保存）
+// ローカルキャッシュ
 // ========================================================
 const DB = {
   get: (k,d) => { try{ const v=localStorage.getItem('yk_'+k); return v?JSON.parse(v):d; }catch(e){ return d; } },
@@ -429,11 +488,9 @@ async function syncFromGAS(showMsg = false) {
       if (showMsg) toast('データを最新に更新しました');
     } else {
       if (showMsg) toast('同期エラー: ' + (json.error || '不明'));
-      console.error('syncFromGAS error:', json.error);
     }
   } catch(err) {
     if (showMsg) toast('通信エラーが発生しました');
-    console.error('syncFromGAS fetch error:', err);
   }
   setSyncBar(false);
 }
@@ -451,11 +508,9 @@ async function pushToGAS(type, data) {
       if (json.reservations) DB.set('res',  json.reservations.map(normalizeRes));
       refreshAllViews();
     } else {
-      console.error('pushToGAS error:', json.error);
       await syncFromGAS();
     }
   } catch(err) {
-    console.error('pushToGAS fetch error:', err);
     await syncFromGAS();
   }
 }
@@ -463,7 +518,15 @@ async function pushToGAS(type, data) {
 async function saveRecs(v) { DB.set('recs', v); await pushToGAS('records', v); }
 async function saveRes(v)  { DB.set('res', v);  await pushToGAS('reservations', v); }
 
-function normalizeRec(r) { return { ...r, id: Number(r.id) || r.id, date: normDate(r.date), classroom: normClassroom(r.classroom) }; }
+function normalizeRec(r) {
+  return {
+    ...r,
+    id: Number(r.id) || r.id,
+    date: normDate(r.date),
+    classroom: normClassroom(r.classroom),
+    books: normBooks(r.books, r.book)  // ★ booksを正規化
+  };
+}
 function normalizeRes(r) { return { ...r, id: Number(r.id) || r.id, date: normDate(r.date), classroom: normClassroom(r.classroom) }; }
 
 function setSyncBar(show) {
@@ -476,7 +539,6 @@ function setSyncBar(show) {
 // ========================================================
 // データアクセサ
 // ========================================================
-// ★学年全体を削除したデフォルト教室リスト
 const DEFAULT_CLS = [
   '1年1組','1年2組','1年3組',
   '2年1組','2年2組','2年3組',
@@ -492,27 +554,36 @@ const getPw   = () => DB.get('pw', DEFAULT_PW);
 const getRecs = () => DB.get('recs', []);
 const getRes  = () => DB.get('res', []);
 
-// ★教室を常に配列で扱うヘルパー
 function normClassroom(c) {
   if (!c) return [];
   if (Array.isArray(c)) return c.filter(Boolean);
   return String(c).split(',').map(s => s.trim()).filter(Boolean);
 }
 
-// ★教室配列を表示用文字列に変換
 function dispClassroom(c) {
   const arr = normClassroom(c);
   return arr.length ? arr.join('・') : '教室未設定';
 }
 
-// ★複数選択セレクトから選択値配列を取得
+// ★ 複数冊を配列に正規化（旧データの book フィールドとの互換性）
+function normBooks(books, book) {
+  if (Array.isArray(books) && books.length > 0) return books.filter(Boolean);
+  if (book) return [book];
+  return [];
+}
+
+// ★ booksフィールドの表示用文字列
+function dispBooks(r) {
+  const books = normBooks(r.books, r.book);
+  return books.length ? books : [''];
+}
+
 function getSelectValues(id) {
   const el = document.getElementById(id);
   if (!el) return [];
   return Array.from(el.selectedOptions).map(o => o.value);
 }
 
-// ★複数選択セレクトに値をセット
 function setSelectValues(id, values) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -520,8 +591,98 @@ function setSelectValues(id, values) {
   Array.from(el.options).forEach(opt => { opt.selected = arr.includes(opt.value); });
 }
 
+// ★ 複数冊入力フィールドから値を取得
+function getBooksFromContainer(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return [];
+  return Array.from(container.querySelectorAll('.book-input-row input'))
+    .map(inp => inp.value.trim())
+    .filter(Boolean);
+}
+
+// ★ 複数冊入力フィールドをリセット
+function resetBooksContainer(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = `
+    <div class="book-input-row" data-idx="0">
+      <div class="book-num-label">1</div>
+      <input type="text" placeholder="本のタイトルを入力">
+    </div>`;
+}
+
+// ★ 複数冊入力フィールドに値をセット
+function setBooksToContainer(containerId, books) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const arr = (Array.isArray(books) && books.length > 0) ? books : [''];
+  container.innerHTML = arr.map((b, i) => `
+    <div class="book-input-row" data-idx="${i}">
+      <div class="book-num-label">${i+1}</div>
+      <input type="text" placeholder="本のタイトルを入力" value="${escHtml(b)}">
+      ${i > 0 ? `<button class="btn-remove-book" onclick="removeBookInput(this)" title="削除">×</button>` : ''}
+    </div>`).join('');
+}
+
+// ★ 本の入力欄を追加
+function addBookInput(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const rows = container.querySelectorAll('.book-input-row');
+  const nextIdx = rows.length;
+  const div = document.createElement('div');
+  div.className = 'book-input-row';
+  div.dataset.idx = nextIdx;
+  div.innerHTML = `
+    <div class="book-num-label">${nextIdx + 1}</div>
+    <input type="text" placeholder="本のタイトルを入力">
+    <button class="btn-remove-book" onclick="removeBookInput(this)" title="削除">×</button>`;
+  container.appendChild(div);
+}
+
+// ★ 本の入力欄を削除して番号を振り直し
+function removeBookInput(btn) {
+  const row = btn.closest('.book-input-row');
+  const container = row.parentElement;
+  row.remove();
+  // 番号振り直し
+  container.querySelectorAll('.book-input-row').forEach((r, i) => {
+    r.querySelector('.book-num-label').textContent = i + 1;
+    r.dataset.idx = i;
+    // 最初の行は×ボタンを非表示
+    const delBtn = r.querySelector('.btn-remove-book');
+    if (i === 0 && delBtn) delBtn.remove();
+  });
+}
+
+// ★ 本の一覧HTMLを生成（記録表示用）
+function renderBookListHtml(r) {
+  const books = dispBooks(r);
+  if (books.length === 1) {
+    return `<div class="record-item-book">📖 ${escHtml(books[0])}</div>`;
+  }
+  const items = books.map((b, i) =>
+    `<div class="record-item-book-entry">
+      <div class="record-item-book-num">${i+1}</div>
+      <span>${escHtml(b)}</span>
+    </div>`
+  ).join('');
+  return `<div class="record-item-book-list">${items}</div>`;
+}
+
+// ★ 全員の今月の記録用・本の表示（シンプル版）
+function renderBookListSimple(r) {
+  const books = dispBooks(r);
+  if (books.length === 1) return `📖 ${escHtml(books[0])}`;
+  return books.map((b, i) => `📖${i+1} ${escHtml(b)}`).join('　');
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 let me = null, isAdmin = false;
-let rMonth = new Date(), aMonth = new Date();
+let rMonth = new Date(), aMonth = new Date(), allMonth = new Date();
 let uCal = new Date(), aCal = new Date();
 let rDate = null, arDate = null, editId = null;
 
@@ -538,10 +699,7 @@ const normDate = s => {
   if (/^\d{4}\/\d{2}\/\d{2}/.test(str)) return str.slice(0, 10).replace(/\//g, '-');
   const d = new Date(str);
   if (!isNaN(d)) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
   return str;
 };
@@ -573,7 +731,7 @@ function refreshAllViews() {
   if (isAdmin) {
     renderAdminRecs(); renderAllRes(); renderAdminCal(); fillNameDropdowns();
   } else if (me) {
-    renderMyRecs(); renderMyRes(); renderUserAllRes(); renderMyCal();
+    renderMyRecs(); renderAllRecords(); renderMyRes(); renderUserAllRes(); renderMyCal();
   }
 }
 
@@ -629,9 +787,7 @@ function fillNameDropdowns() {
 
 function initAdmin() {
   const cls=getCls();
-  // 複数選択セレクト群（multiple属性あり）
   fillSelect(['admin-record-class','admin-reserve-class','edit-class','record-class','reserve-class'], cls);
-  // 単一選択セレクト
   fillSelect(['junior-class'], cls);
   fillNameDropdowns(); renderAdminCal(); renderAdminRecs(); renderAllRes();
   renderCls(); renderWd(); renderJuniors(); renderBlockedDates();
@@ -643,12 +799,12 @@ function initAdmin() {
 function initUser() {
   document.getElementById('user-badge-name').textContent=me;
   fillSelect(['record-class','reserve-class'], getCls());
-  rMonth=new Date();
-  renderMyRecs(); renderMyCal(); renderMyRes(); renderUserAllRes();
+  rMonth=new Date(); allMonth=new Date();
+  renderMyRecs(); renderAllRecords(); renderMyCal(); renderMyRes(); renderUserAllRes();
 }
 
 // ========================================================
-// カレンダー生成（予約可視化つき）
+// カレンダー生成
 // ========================================================
 function buildCalHtml(date, clickFn, targetDateVar) {
   const year=date.getFullYear(), month=date.getMonth();
@@ -667,25 +823,19 @@ function buildCalHtml(date, clickFn, targetDateVar) {
     const dStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const curDay=new Date(year,month,d).getDay();
     const isSelectable=activeWdays.includes(curDay) && !blocked.includes(dStr) && dStr>=todayStr;
-
-    // ★予約済み教室を配列から集計
     const bookedSet = new Set();
     getRes().filter(r => r.date === dStr).forEach(r => {
       normClassroom(r.classroom).forEach(c => bookedSet.add(c));
     });
     const reservedCount = bookedSet.size;
     const fullyBooked = allCls.length > 0 && reservedCount >= allCls.length;
-    const hasPartial = reservedCount > 0 && !fullyBooked;
-
     const isSel=(targetDateVar==='rDate'&&rDate===dStr)||(targetDateVar==='arDate'&&arDate===dStr);
-
     let dotsHtml='';
     if(reservedCount>0){
       const dotClass=fullyBooked?'cal-dot full':'cal-dot';
       const dotCount=Math.min(reservedCount,4);
       dotsHtml=`<div class="cal-dots">${Array(dotCount).fill(`<div class="${dotClass}"></div>`).join('')}</div>`;
     }
-
     if(isSelectable && !fullyBooked){
       html+=`<div class="cal-cell pick ${isSel?'sel':''}" onclick="selectCalDate('${targetDateVar}','${dStr}')"><span class="cal-num">${d}</span>${dotsHtml}</div>`;
     } else {
@@ -715,11 +865,8 @@ function renderReserveStatusForDate(dStr) {
   const msg=document.getElementById('reserve-status-msg'); if(!msg) return;
   const reserved=getRes().filter(r=>r.date===dStr);
   if(!reserved.length){ msg.textContent=''; return; }
-  // ★教室→名前のマップを構築
   const bookedMap={};
-  reserved.forEach(r => {
-    normClassroom(r.classroom).forEach(c => { bookedMap[c]=r.name; });
-  });
+  reserved.forEach(r => { normClassroom(r.classroom).forEach(c => { bookedMap[c]=r.name; }); });
   const lines=Object.entries(bookedMap).map(([c,n])=>`🔴 ${c}：${n}`).join('　');
   msg.innerHTML=`<span style="color:var(--red);">この日の予約済み教室：</span>${lines}`;
 }
@@ -728,16 +875,12 @@ function checkReservationConflict() {
   const btn=document.getElementById('reserve-btn'); if(!btn) return;
   if(!rDate){ btn.textContent='予約する'; btn.disabled=false; btn.style.opacity='1'; return; }
   const selectedCls = getSelectValues('reserve-class');
-  if(selectedCls.length===0){
-    btn.textContent='教室を選択してください'; btn.disabled=true; btn.style.opacity='0.5'; return;
-  }
-  // ★複数教室の競合チェック
+  if(selectedCls.length===0){ btn.textContent='教室を選択してください'; btn.disabled=true; btn.style.opacity='0.5'; return; }
   const bookedSet = new Set();
   getRes().filter(r=>r.date===rDate).forEach(r=>{ normClassroom(r.classroom).forEach(c=>bookedSet.add(c)); });
   const conflicts = selectedCls.filter(c=>bookedSet.has(c));
   if(conflicts.length>0){
-    btn.textContent=`${conflicts.join('・')}はすでに予約済みです`;
-    btn.disabled=true; btn.style.opacity='0.5';
+    btn.textContent=`${conflicts.join('・')}はすでに予約済みです`; btn.disabled=true; btn.style.opacity='0.5';
   } else {
     btn.textContent='予約する'; btn.disabled=false; btn.style.opacity='1';
   }
@@ -755,18 +898,11 @@ async function submitReservation() {
   if(!rDate){ toast('日付を選択してください'); return; }
   const selectedCls = getSelectValues('reserve-class');
   if(selectedCls.length===0){ toast('教室を選択してください'); return; }
-
   await syncFromGAS();
-
-  // ★再チェック（他端末との競合）
   const bookedSet = new Set();
   getRes().filter(r=>r.date===rDate).forEach(r=>{ normClassroom(r.classroom).forEach(c=>bookedSet.add(c)); });
   const conflicts = selectedCls.filter(c=>bookedSet.has(c));
-  if(conflicts.length>0){
-    toast(`${conflicts.join('・')}は他から予約が入りました`);
-    checkReservationConflict(); return;
-  }
-
+  if(conflicts.length>0){ toast(`${conflicts.join('・')}は他から予約が入りました`); checkReservationConflict(); return; }
   const res=getRes();
   res.push({ id:Date.now(), date:rDate, name:me, classroom:selectedCls });
   await saveRes(res);
@@ -800,35 +936,36 @@ async function cancelRes(id) {
 // 活動記録
 // ========================================================
 async function submitRecord() {
-  const book=document.getElementById('record-book').value.trim();
+  const books = getBooksFromContainer('record-books-container');
   const selectedCls = getSelectValues('record-class');
-  const note=document.getElementById('record-note').value.trim();
-  if(!book){ toast('本のタイトルを入力してください'); return; }
-  if(selectedCls.length===0){ toast('教室を選択してください'); return; }
+  const note = document.getElementById('record-note').value.trim();
+  if(books.length === 0){ toast('本のタイトルを入力してください'); return; }
+  if(selectedCls.length === 0){ toast('教室を選択してください'); return; }
   const recs=getRecs();
-  recs.push({ id:Date.now(), date:today(), reader:me, classroom:selectedCls, book, note });
+  recs.push({ id:Date.now(), date:today(), reader:me, classroom:selectedCls, books, book:books[0], note });
   await saveRecs(recs);
   toast('記録を保存しました');
-  document.getElementById('record-book').value='';
+  resetBooksContainer('record-books-container');
   document.getElementById('record-note').value='';
-  renderMyRecs();
+  renderMyRecs(); renderAllRecords();
 }
 
 async function adminSubmitRecord() {
   const dateEl = document.getElementById('admin-record-date');
   const dateVal = (dateEl && dateEl.value) ? normDate(dateEl.value) : today();
-  const name=document.getElementById('admin-record-name').value.trim();
+  const name = document.getElementById('admin-record-name').value.trim();
   const selectedCls = getSelectValues('admin-record-class');
-  const book=document.getElementById('admin-record-book').value.trim();
-  const note=document.getElementById('admin-record-note').value.trim();
-  if(!name||!book){ toast('名前と本のタイトルを入力してください'); return; }
-  if(selectedCls.length===0){ toast('教室を選択してください'); return; }
+  const books = getBooksFromContainer('admin-record-books-container');
+  const note = document.getElementById('admin-record-note').value.trim();
+  if(!name){ toast('名前を入力してください'); return; }
+  if(books.length === 0){ toast('本のタイトルを入力してください'); return; }
+  if(selectedCls.length === 0){ toast('教室を選択してください'); return; }
   const recs=getRecs();
-  recs.push({ id:Date.now(), date:dateVal, reader:name, classroom:selectedCls, book, note });
+  recs.push({ id:Date.now(), date:dateVal, reader:name, classroom:selectedCls, books, book:books[0], note });
   await saveRecs(recs);
   toast('代理記録を保存しました');
   document.getElementById('admin-record-name').value='';
-  document.getElementById('admin-record-book').value='';
+  resetBooksContainer('admin-record-books-container');
   document.getElementById('admin-record-note').value='';
   if(dateEl) dateEl.value = today();
   renderAdminRecs(); fillNameDropdowns();
@@ -837,9 +974,12 @@ async function adminSubmitRecord() {
 // ========================================================
 // 一覧描画
 // ========================================================
-function changeRecordMonth(dir) { rMonth.setMonth(rMonth.getMonth()+dir); renderMyRecs(); }
-function changeAdminMonth(dir)  { aMonth.setMonth(aMonth.getMonth()+dir); renderAdminRecs(); }
+function changeRecordMonth(dir)    { rMonth.setMonth(rMonth.getMonth()+dir); renderMyRecs(); }
+function changeAdminMonth(dir)     { aMonth.setMonth(aMonth.getMonth()+dir); renderAdminRecs(); }
+// ★ 全員の記録の月変更
+function changeAllRecordMonth(dir) { allMonth.setMonth(allMonth.getMonth()+dir); renderAllRecords(); }
 
+// ★ 自分の今月の記録
 function renderMyRecs() {
   const el=document.getElementById('my-records-list'); if(!el) return;
   const mStr=`${rMonth.getFullYear()}-${String(rMonth.getMonth()+1).padStart(2,'0')}`;
@@ -850,7 +990,40 @@ function renderMyRecs() {
     return r.reader && r.reader.trim()===myName;
   });
   if(!items.length){ el.innerHTML=emptyHtml('📝','今月の記録はありません'); return; }
-  el.innerHTML=items.map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${normDate(r.date)}</span><div class="record-item-classes">${normClassroom(r.classroom).map(c=>`<span class="record-item-class">${c}</span>`).join('')}</div></div><div class="record-item-book">📖 ${r.book}</div>${r.note?`<div class="record-item-note">💡 ${r.note}</div>`:''}</div>`).join('');
+  el.innerHTML=items.map(r=>`
+    <div class="record-item">
+      <div class="record-item-header">
+        <span class="record-item-date">${normDate(r.date)}</span>
+        <div class="record-item-classes">
+          ${normClassroom(r.classroom).map(c=>`<span class="record-item-class">${c}</span>`).join('')}
+        </div>
+      </div>
+      ${renderBookListHtml(r)}
+      ${r.note?`<div class="record-item-note">💡 ${escHtml(r.note)}</div>`:''}
+    </div>`).join('');
+}
+
+// ★ 全員の今月の記録（一般ユーザー向け新規機能）
+function renderAllRecords() {
+  const el = document.getElementById('all-records-list'); if(!el) return;
+  const mStr = `${allMonth.getFullYear()}-${String(allMonth.getMonth()+1).padStart(2,'0')}`;
+  const labelEl = document.getElementById('all-record-month');
+  if(labelEl) labelEl.textContent = fmtM(allMonth);
+  const items = getRecs().filter(r => r.date.startsWith(mStr))
+    .sort((a,b) => a.date.localeCompare(b.date));
+  if(!items.length){ el.innerHTML=emptyHtml('📚','今月の記録はありません'); return; }
+  el.innerHTML = items.map(r => `
+    <div class="all-record-item">
+      <div class="all-record-header">
+        <span class="record-item-date">${normDate(r.date)}</span>
+        <span class="all-record-reader">👤 ${escHtml(r.reader)}</span>
+      </div>
+      <div class="record-item-classes" style="justify-content:flex-start;margin-bottom:5px;">
+        ${normClassroom(r.classroom).map(c=>`<span class="record-item-class">${c}</span>`).join('')}
+      </div>
+      <div style="font-size:13px;color:var(--gray-800);">${renderBookListSimple(r)}</div>
+      ${r.note?`<div class="record-item-note">💡 ${escHtml(r.note)}</div>`:''}
+    </div>`).join('');
 }
 
 function renderAdminRecs() {
@@ -859,7 +1032,21 @@ function renderAdminRecs() {
   document.getElementById('admin-manage-month').textContent=fmtM(aMonth);
   const items=getRecs().filter(r=>r.date.startsWith(mStr)).sort((a,b)=>a.date.localeCompare(b.date));
   if(!items.length){ el.innerHTML=emptyHtml('📝','対象月の記録はありません'); return; }
-  el.innerHTML=items.map(r=>`<div class="record-item"><div class="record-item-header"><span class="record-item-date">${r.date}</span><div class="record-item-classes">${normClassroom(r.classroom).map(c=>`<span class="record-item-class">${c}</span>`).join('')}</div></div><div class="record-item-book">📖 ${r.book} <span style="font-weight:normal;font-size:12px;color:var(--gray-600);">（👤 ${r.reader}）</span></div><div class="record-actions"><button class="btn-edit" onclick="openEdit(${r.id})">編集</button><button class="btn-del" onclick="deleteRec(${r.id})">削除</button></div></div>`).join('');
+  el.innerHTML=items.map(r=>`
+    <div class="record-item">
+      <div class="record-item-header">
+        <span class="record-item-date">${r.date}</span>
+        <div class="record-item-classes">
+          ${normClassroom(r.classroom).map(c=>`<span class="record-item-class">${c}</span>`).join('')}
+        </div>
+      </div>
+      ${renderBookListHtml(r)}
+      <div style="font-size:12px;color:var(--gray-600);margin-top:3px;">👤 ${escHtml(r.reader)}</div>
+      <div class="record-actions">
+        <button class="btn-edit" onclick="openEdit(${r.id})">編集</button>
+        <button class="btn-del" onclick="deleteRec(${r.id})">削除</button>
+      </div>
+    </div>`).join('');
 }
 
 function renderMyRes() {
@@ -903,10 +1090,10 @@ function openEdit(id) {
   const dateEl=document.getElementById('edit-date');
   if(dateEl) dateEl.value=normDate(r.date)||today();
   document.getElementById('edit-reader').value=r.reader;
-  // ★複数選択セレクトに教室配列をセット
   fillSelect(['edit-class'], getCls());
   setSelectValues('edit-class', r.classroom);
-  document.getElementById('edit-book').value=r.book;
+  // ★ 複数冊をモーダルにセット
+  setBooksToContainer('edit-books-container', dispBooks(r));
   document.getElementById('edit-note').value=r.note||'';
   document.getElementById('modal-edit').classList.add('active');
 }
@@ -916,8 +1103,10 @@ async function saveEdit() {
   const dateEl=document.getElementById('edit-date');
   if(dateEl&&dateEl.value) r.date=normDate(dateEl.value);
   r.reader=document.getElementById('edit-reader').value;
-  r.classroom=getSelectValues('edit-class');  // ★配列で保存
-  r.book=document.getElementById('edit-book').value;
+  r.classroom=getSelectValues('edit-class');
+  const books = getBooksFromContainer('edit-books-container');
+  r.books = books;
+  r.book = books[0] || '';
   r.note=document.getElementById('edit-note').value;
   await saveRecs(recs); closeModal(); renderAdminRecs(); toast('変更しました');
 }
@@ -968,8 +1157,11 @@ function exportCSV() {
   const y=document.getElementById('export-year').value, m=String(document.getElementById('export-month').value).padStart(2,'0');
   const items=getRecs().filter(r=>r.date.startsWith(`${y}-${m}`));
   if(!items.length){ toast('対象データの記録がありません'); return; }
-  // ★教室配列をカンマ区切りでCSVに出力
-  let csv='日付,教室,読んだ本,読んだ人,備考\n'+items.map(r=>`"${r.date}","${dispClassroom(r.classroom)}","${r.book}","${r.reader}","${r.note}"`).join('\n');
+  // ★ 複数冊をCSVに出力（セミコロン区切り）
+  let csv='日付,教室,読んだ本,読んだ人,備考\n'+items.map(r=>{
+    const books = dispBooks(r).join(';');
+    return `"${r.date}","${dispClassroom(r.classroom)}","${books}","${r.reader}","${r.note||''}"`;
+  }).join('\n');
   const bom=new Uint8Array([0xEF,0xBB,0xBF]), blob=new Blob([bom,csv],{type:'text/csv'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`よみきかせ記録_${y}年${m}月.csv`; a.click();
 }
