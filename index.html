@@ -87,10 +87,7 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 .btn-edit { background: var(--green-light); color: var(--green-dark); border: none; padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit; }
 .btn-del { background: var(--red-light); color: var(--red); border: none; padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-family: inherit; }
 
-/* ★ 全員の今月の記録（一般ユーザー向け） */
-.all-record-item { background: white; border-radius: 9px; padding: 11px 13px; border: 1px solid var(--gray-200); margin-bottom: 7px; }
-.all-record-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; gap: 6px; }
-.all-record-reader { font-size: 12px; font-weight: 600; color: var(--green-dark); background: var(--green-light); padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+
 
 .calendar { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 14px; }
 .cal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--green-dark); }
@@ -146,6 +143,33 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
 .cal-legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11px; color: var(--gray-600); padding: 8px 12px; border-top: 1px solid var(--gray-200); }
 .cal-legend-item { display: flex; align-items: center; gap: 4px; }
 .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ===== クラス別 読み聞かせ表 ===== */
+.class-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 9px; border: 1px solid var(--gray-200); }
+.class-table { border-collapse: collapse; width: 100%; min-width: 480px; font-size: 12px; }
+.class-table th { background: var(--green-dark); color: white; padding: 8px 6px; text-align: center; font-weight: 600; white-space: nowrap; }
+.class-table th.cls-head { text-align: left; min-width: 80px; position: sticky; left: 0; z-index: 3; background: var(--green-dark); }
+.class-table td { padding: 7px 6px; border-bottom: 1px solid var(--gray-200); text-align: center; vertical-align: middle; white-space: nowrap; }
+.class-table td.cls-cell { text-align: left; font-weight: 600; color: var(--green-dark); background: var(--green-light); position: sticky; left: 0; z-index: 1; border-right: 2px solid var(--green-mid); font-size: 11px; padding: 7px 8px; }
+.class-table tr:last-child td { border-bottom: none; }
+.class-table tr:nth-child(even) td:not(.cls-cell) { background: var(--gray-50); }
+.class-table tr:nth-child(odd) td:not(.cls-cell) { background: white; }
+/* ●ドット */
+.rec-dot { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--green); cursor: pointer; transition: transform .15s, box-shadow .15s; }
+.rec-dot:hover, .rec-dot:focus { transform: scale(1.2); box-shadow: 0 2px 8px rgba(45,122,79,0.4); outline: none; }
+/* デスクトップ ホバーポップアップ */
+.rec-popup { display: none; position: fixed; z-index: 500; background: var(--gray-800); color: white; border-radius: 10px; padding: 10px 13px; font-size: 12px; line-height: 1.7; max-width: 220px; box-shadow: 0 4px 20px rgba(0,0,0,.3); pointer-events: none; }
+.rec-popup.show { display: block; }
+.rec-popup-date { font-size: 11px; color: #9aab9a; margin-bottom: 3px; }
+.rec-popup-reader { font-weight: 700; color: #7dd8a4; }
+.rec-popup-book { color: white; }
+/* モバイル用ボトムシート */
+.rec-popup-mobile { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 500; background: var(--gray-800); color: white; border-radius: 20px 20px 0 0; padding: 20px 18px 36px; font-size: 14px; line-height: 1.8; box-shadow: 0 -4px 20px rgba(0,0,0,.3); }
+.rec-popup-mobile.show { display: block; }
+.rec-popup-mobile-close { position: absolute; top: 14px; right: 16px; background: rgba(255,255,255,.15); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; font-size: 16px; cursor: pointer; font-family: inherit; }
+.rec-popup-overlay { display: none; position: fixed; inset: 0; z-index: 499; }
+.rec-popup-overlay.show { display: block; }
+
 </style>
 </head>
 <body>
@@ -241,15 +265,18 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
         </div>
         <div id="my-records-list"></div>
       </div>
-      <!-- ★ 全員の今月の記録（新規追加） -->
-      <div class="card">
-        <h3>みんなの今月の記録</h3>
+      <!-- ③ クラス別 読み聞かせ表 -->
+      <div class="card" style="padding:18px 14px;">
+        <h3>クラス別 読み聞かせ表</h3>
         <div class="month-nav">
-          <button class="month-btn" onclick="changeAllRecordMonth(-1)">←</button>
-          <div class="month-label" id="all-record-month"></div>
-          <button class="month-btn" onclick="changeAllRecordMonth(1)">→</button>
+          <button class="month-btn" onclick="changeClassTableMonth(-1)">←</button>
+          <div class="month-label" id="class-table-month"></div>
+          <button class="month-btn" onclick="changeClassTableMonth(1)">→</button>
         </div>
-        <div id="all-records-list"></div>
+        <p style="font-size:11px;color:var(--gray-400);margin-bottom:10px;">● のあるセルをタップすると詳細が表示されます</p>
+        <div class="class-table-wrap">
+          <div id="class-table-container"></div>
+        </div>
       </div>
     </div>
     <div class="tab-panel" id="user-panel-reserve">
@@ -453,6 +480,16 @@ body { font-family: 'Hiragino Kaku Gothic ProN','Meiryo',sans-serif; background:
     <p style="font-size:11px;color:var(--gray-400);margin-bottom:16px;" id="qr-url-label"></p>
     <button class="btn btn-primary" onclick="closeQR()">閉じる</button>
   </div>
+</div>
+
+
+<!-- デスクトップ用ホバーポップアップ -->
+<div class="rec-popup" id="popup-desktop"></div>
+<!-- モバイル用ボトムシート -->
+<div class="rec-popup-overlay" id="popup-overlay" onclick="closeMobilePopup()"></div>
+<div class="rec-popup-mobile" id="popup-mobile">
+  <button class="rec-popup-mobile-close" onclick="closeMobilePopup()">×</button>
+  <div id="popup-mobile-content"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -671,18 +708,14 @@ function renderBookListHtml(r) {
 }
 
 // ★ 全員の今月の記録用・本の表示（シンプル版）
-function renderBookListSimple(r) {
-  const books = dispBooks(r);
-  if (books.length === 1) return `📖 ${escHtml(books[0])}`;
-  return books.map((b, i) => `📖${i+1} ${escHtml(b)}`).join('　');
-}
+
 
 function escHtml(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 let me = null, isAdmin = false;
-let rMonth = new Date(), aMonth = new Date(), allMonth = new Date();
+let rMonth = new Date(), aMonth = new Date(), ctMonth = new Date();
 let uCal = new Date(), aCal = new Date();
 let rDate = null, arDate = null, editId = null;
 
@@ -731,7 +764,7 @@ function refreshAllViews() {
   if (isAdmin) {
     renderAdminRecs(); renderAllRes(); renderAdminCal(); fillNameDropdowns();
   } else if (me) {
-    renderMyRecs(); renderAllRecords(); renderMyRes(); renderUserAllRes(); renderMyCal();
+    renderMyRecs(); renderClassTable(); renderMyRes(); renderUserAllRes(); renderMyCal();
   }
 }
 
@@ -799,8 +832,8 @@ function initAdmin() {
 function initUser() {
   document.getElementById('user-badge-name').textContent=me;
   fillSelect(['record-class','reserve-class'], getCls());
-  rMonth=new Date(); allMonth=new Date();
-  renderMyRecs(); renderAllRecords(); renderMyCal(); renderMyRes(); renderUserAllRes();
+  rMonth=new Date(); ctMonth=new Date();
+  renderMyRecs(); renderClassTable(); renderMyCal(); renderMyRes(); renderUserAllRes();
 }
 
 // ========================================================
@@ -947,7 +980,7 @@ async function submitRecord() {
   toast('記録を保存しました');
   resetBooksContainer('record-books-container');
   document.getElementById('record-note').value='';
-  renderMyRecs(); renderAllRecords();
+  renderMyRecs(); renderClassTable();
 }
 
 async function adminSubmitRecord() {
@@ -976,8 +1009,6 @@ async function adminSubmitRecord() {
 // ========================================================
 function changeRecordMonth(dir)    { rMonth.setMonth(rMonth.getMonth()+dir); renderMyRecs(); }
 function changeAdminMonth(dir)     { aMonth.setMonth(aMonth.getMonth()+dir); renderAdminRecs(); }
-// ★ 全員の記録の月変更
-function changeAllRecordMonth(dir) { allMonth.setMonth(allMonth.getMonth()+dir); renderAllRecords(); }
 
 // ★ 自分の今月の記録
 function renderMyRecs() {
@@ -1003,27 +1034,113 @@ function renderMyRecs() {
     </div>`).join('');
 }
 
-// ★ 全員の今月の記録（一般ユーザー向け新規機能）
-function renderAllRecords() {
-  const el = document.getElementById('all-records-list'); if(!el) return;
-  const mStr = `${allMonth.getFullYear()}-${String(allMonth.getMonth()+1).padStart(2,'0')}`;
-  const labelEl = document.getElementById('all-record-month');
-  if(labelEl) labelEl.textContent = fmtM(allMonth);
-  const items = getRecs().filter(r => r.date.startsWith(mStr))
-    .sort((a,b) => a.date.localeCompare(b.date));
-  if(!items.length){ el.innerHTML=emptyHtml('📚','今月の記録はありません'); return; }
-  el.innerHTML = items.map(r => `
-    <div class="all-record-item">
-      <div class="all-record-header">
-        <span class="record-item-date">${normDate(r.date)}</span>
-        <span class="all-record-reader">👤 ${escHtml(r.reader)}</span>
-      </div>
-      <div class="record-item-classes" style="justify-content:flex-start;margin-bottom:5px;">
-        ${normClassroom(r.classroom).map(c=>`<span class="record-item-class">${c}</span>`).join('')}
-      </div>
-      <div style="font-size:13px;color:var(--gray-800);">${renderBookListSimple(r)}</div>
-      ${r.note?`<div class="record-item-note">💡 ${escHtml(r.note)}</div>`:''}
-    </div>`).join('');
+// ★ クラス別 読み聞かせ表
+function changeClassTableMonth(dir){ ctMonth.setMonth(ctMonth.getMonth()+dir); renderClassTable(); }
+
+function renderClassTable(){
+  const el=document.getElementById('class-table-container');
+  const lbl=document.getElementById('class-table-month');
+  if(!el)return;
+  if(lbl)lbl.textContent=fmtM(ctMonth);
+  const year=ctMonth.getFullYear(), month=ctMonth.getMonth();
+  const lastDay=new Date(year,month+1,0).getDate();
+  const mStr=`${year}-${String(month+1).padStart(2,'0')}`;
+  const cls=getCls();
+  const recs=getRecs().filter(r=>r.date.startsWith(mStr));
+  // 記録のある日付のみ列に表示
+  const activeDays=[];
+  for(let d=1;d<=lastDay;d++){
+    const dStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if(recs.some(r=>r.date===dStr))activeDays.push(dStr);
+  }
+  if(activeDays.length===0){el.innerHTML=`<p style="text-align:center;padding:24px;color:var(--gray-400);font-size:13px;">この月の記録はありません</p>`;return;}
+  const dayNames='日月火水木金土';
+  let html=`<table class="class-table"><thead><tr><th class="cls-head">教室</th>`;
+  activeDays.forEach(d=>{
+    const p=d.split('-'); const wd=dayNames[new Date(d).getDay()];
+    html+=`<th>${parseInt(p[2])}日<br><span style="font-weight:400;font-size:10px;">${wd}</span></th>`;
+  });
+  html+=`</tr></thead><tbody>`;
+  cls.forEach(c=>{
+    html+=`<tr><td class="cls-cell">${escHtml(c)}</td>`;
+    activeDays.forEach(dStr=>{
+      const dayRecs=recs.filter(r=>r.date===dStr&&normClassroom(r.classroom).includes(c));
+      if(dayRecs.length>0){
+        const info=dayRecs.map(r=>({date:dStr,reader:r.reader,books:dispBooks(r).length?dispBooks(r):['(タイトルなし)']}));
+        const dataAttr=escHtml(JSON.stringify(info));
+        html+=`<td><div class="rec-dot" tabindex="0"
+          data-info="${dataAttr}" data-cls="${escHtml(c)}"
+          onmouseenter="showDesktopPopup(event,this)"
+          onmouseleave="hideDesktopPopup()"
+          onclick="handleDotClick(event,this)">
+          <svg width="10" height="10" viewBox="0 0 10 10"><circle cx="5" cy="5" r="4.5" fill="white"/></svg>
+        </div></td>`;
+      }else{
+        html+=`<td style="color:var(--gray-200);">－</td>`;
+      }
+    });
+    html+=`</tr>`;
+  });
+  html+=`</tbody></table>`;
+  el.innerHTML=html;
+}
+
+// ---- ポップアップ制御 ----
+const isMobile=()=>window.innerWidth<768;
+
+function handleDotClick(e,el){
+  if(isMobile()){e.stopPropagation();showMobilePopup(el);}
+  // デスクトップはホバーで対応済み
+}
+
+function showDesktopPopup(e,el){
+  if(isMobile())return;
+  const popup=document.getElementById('popup-desktop');
+  popup.innerHTML=buildPopupInner(JSON.parse(el.dataset.info||'[]'),el.dataset.cls||'',false);
+  popup.classList.add('show');
+  positionPopup(e.clientX,e.clientY,popup);
+}
+function hideDesktopPopup(){ document.getElementById('popup-desktop').classList.remove('show'); }
+document.addEventListener('mousemove',e=>{
+  const p=document.getElementById('popup-desktop');
+  if(p&&p.classList.contains('show'))positionPopup(e.clientX,e.clientY,p);
+});
+function positionPopup(cx,cy,popup){
+  const pw=popup.offsetWidth||220,ph=popup.offsetHeight||80;
+  let x=cx+14,y=cy-ph-10;
+  if(x+pw>window.innerWidth-8)x=cx-pw-10;
+  if(y<8)y=cy+18;
+  popup.style.left=x+'px';popup.style.top=y+'px';
+}
+
+function showMobilePopup(el){
+  const info=JSON.parse(el.dataset.info||'[]');
+  const cls=el.dataset.cls||'';
+  document.getElementById('popup-mobile-content').innerHTML=
+    `<div style="font-weight:700;color:#7dd8a4;font-size:15px;margin-bottom:10px;">${escHtml(cls)}</div>`+
+    buildPopupInner(info,cls,true);
+  document.getElementById('popup-mobile').classList.add('show');
+  document.getElementById('popup-overlay').classList.add('show');
+}
+function closeMobilePopup(){
+  document.getElementById('popup-mobile').classList.remove('show');
+  document.getElementById('popup-overlay').classList.remove('show');
+}
+
+function buildPopupInner(info,cls,isMob){
+  const sep=isMob?`<hr style="border:none;border-top:1px solid rgba(255,255,255,.15);margin:8px 0;">`:'';
+  return info.map((item,i)=>{
+    const p=item.date.split('-');
+    const dateStr=`${parseInt(p[1])}月${parseInt(p[2])}日（${'日月火水木金土'[new Date(item.date).getDay()]}）`;
+    const booksHtml=item.books.map((b,bi)=>
+      item.books.length===1?`<div>📖 ${escHtml(b)}</div>`:`<div>📖${bi+1} ${escHtml(b)}</div>`
+    ).join('');
+    return (i>0?sep:'')+`<div style="margin-bottom:${isMob?'6px':'4px'};">
+      <div class="rec-popup-date">${dateStr}</div>
+      <div class="rec-popup-reader">👤 ${escHtml(item.reader)}</div>
+      <div class="rec-popup-book">${booksHtml}</div>
+    </div>`;
+  }).join('');
 }
 
 function renderAdminRecs() {
